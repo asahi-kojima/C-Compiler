@@ -126,6 +126,9 @@ int main(int argc, char **argv)
 
     token = tokenize(argv[1]);
 
+    token = tokenize(argv[1]);
+
+    char *p = argv[1];
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
     printf("main:\n");
