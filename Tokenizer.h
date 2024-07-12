@@ -32,9 +32,9 @@ private:
     Token *token;
     char *user_input;
 
-    Token *new_token(TokenKind kind, Token *cur, char *str);
+    Token *new_token(TokenKind kind, Token *cur, const char *str);
 
-    void error(char *fmt, ...)
+    void error(const char *fmt, ...)
     {
         va_list ap;
         va_start(ap, fmt);
@@ -43,7 +43,7 @@ private:
         exit(1);
     }
 
-    void error_at(char *location, char *fmt, ...)
+    void error_at(const char *location, const char *fmt, ...)
     {
         va_list ap;
         va_start(ap, fmt);

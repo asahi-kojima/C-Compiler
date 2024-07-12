@@ -59,25 +59,39 @@ Node *expr(Token &token)
 }
 
 Node *primary(Token &);
+Node* unary(Token&);
 Node *mul(Token &token)
 {
-    Node *node = primary(token);
+    Node *node = unary(token);
 
     for (;;)
     {
         if (token.consume('*'))
         {
-            node = new_node(NodeKind::ND_MUL, node, primary(token));
+            node = new_node(NodeKind::ND_MUL, node, unary(token));
         }
         else if (token.consume('/'))
         {
-            node = new_node(NodeKind::ND_DIV, node, primary(token));
+            node = new_node(NodeKind::ND_DIV, node, unary(token));
         }
         else
         {
             return node;
         }
     }
+}
+
+Node* unary(Token& token)
+{
+    if (token.consume('+'))
+    {
+        return primary(token);
+    }
+    if (token.consume('-'))
+    {
+        return new_node(NodeKind::ND_SUB, new_node_num(0), primary(token));
+    }
+    return primary(token);
 }
 
 Node *primary(Token &token)
