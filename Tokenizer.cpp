@@ -16,7 +16,7 @@ void Token::tokenize()
             continue;
         }
 
-        if (*p == '+' || *p == '-')
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/')
         {
             cur = new_token(TokenKind::TK_RESERVED, cur, p);
             p++;
