@@ -32,7 +32,7 @@ private:
     Token *token;
     char *user_input;
 
-    Token *new_token(TokenKind kind, Token *cur, const char *str);
+    Token *new_token(TokenKind kind, Token *cur, char *str);
 
     void error(const char *fmt, ...)
     {
