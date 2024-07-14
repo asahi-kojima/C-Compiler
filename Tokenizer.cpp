@@ -16,16 +16,26 @@ void Token::tokenize()
             continue;
         }
 
-        if (*p == '+' || *p == '-' || *p == '*' || *p == '/')
+        if (!memcmp(p, "==", 2) ||
+            !memcmp(p, "!=", 2) ||
+            !memcmp(p, "<=", 2) ||
+            !memcmp(p, ">=", 2))
         {
-            cur = new_token(TokenKind::TK_RESERVED, cur, p);
+            cur = new_token(TokenKind::TK_RESERVED, cur, p, 2);
+            p += 2;
+            continue;
+        }
+
+        if (strchr("+-*/()<>", *p))
+        {
+            cur = new_token(TokenKind::TK_RESERVED, cur, p, 1);
             p++;
             continue;
         }
 
         if (isdigit(*p))
         {
-            cur = new_token(TokenKind::TK_NUM, cur, p);
+            cur = new_token(TokenKind::TK_NUM, cur, p, 0);
             cur->val = strtol(p, &p, 10);
             continue;
         }
@@ -33,23 +43,26 @@ void Token::tokenize()
         error_at(p, "トークナイズ出来ませんでした。");
     }
 
-    new_token(TokenKind::TK_EOF, cur, p);
-    token =  head.mNext;
+    new_token(TokenKind::TK_EOF, cur, p, 0);
+    token = head.mNext;
 }
 
-Token *Token::new_token(TokenKind kind, Token *cur, char *str)
+Token *Token::new_token(TokenKind kind, Token *cur, char *str, int len)
 {
     Token *token = reinterpret_cast<Token *>(calloc(1, sizeof(Token)));
     token->mKind = kind;
     token->str = str;
-    token->user_input  = cur->user_input;
+    token->len = len;
+    token->user_input = cur->user_input;
     cur->mNext = token;
     return token;
 }
 
-bool Token::consume(char op)
+bool Token::consume(const char *op)
 {
-    if (token->mKind != TokenKind::TK_RESERVED || token->str[0] != op)
+    if (token->mKind != TokenKind::TK_RESERVED ||
+        strlen(op) != token->len ||
+        memcmp(token->str, op, token->len))
     {
         return false;
     }
@@ -58,9 +71,11 @@ bool Token::consume(char op)
     return true;
 }
 
-void Token::expect(char op)
+void Token::expect(const char *op)
 {
-    if (token->mKind != TokenKind::TK_RESERVED || token->str[0] != op)
+    if (token->mKind != TokenKind::TK_RESERVED ||
+        strlen(op) != token->len ||
+        memcmp(token->str, op, token->len))
     {
         error_at(token->str, "'%c'ではありません。", op);
     }
@@ -84,5 +99,3 @@ bool Token::at_end() const
 {
     return token->mKind == TokenKind::TK_EOF;
 }
-
-

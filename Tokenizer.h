@@ -18,8 +18,8 @@ public:
     Token(char* user_input) : token(nullptr) , user_input(user_input){}
     void tokenize();
 
-    bool consume(char op);
-    void expect(char op);
+    bool consume(const char* op);
+    void expect(const char* op);
     int expect_number();
     bool at_end() const;
 
@@ -28,11 +28,12 @@ private:
     Token *mNext;
     int val;
     char *str;
+    int len;
 
     Token *token;
     char *user_input;
 
-    Token *new_token(TokenKind kind, Token *cur, char *str);
+    Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 
     void error(const char *fmt, ...)
     {

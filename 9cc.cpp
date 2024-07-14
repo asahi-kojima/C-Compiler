@@ -8,6 +8,12 @@ enum class NodeKind
     ND_SUB,
     ND_MUL,
     ND_DIV,
+
+    ND_EQ,
+    ND_NE,
+    ND_LT,
+    ND_LE,
+
     ND_NUM,
 };
 
@@ -36,18 +42,82 @@ Node *new_node_num(int num)
     return node;
 }
 
+
+Node *equality(Token &token);
+Node *relatinal(Token &token);
+Node *add(Token &token);
 Node *mul(Token &token);
+Node *unary(Token &);
+Node *primary(Token &);
+
 Node *expr(Token &token)
+{
+    Node *node = equality(token);
+
+    return node;
+}
+
+Node *equality(Token &token)
+{
+    Node *node = relatinal(token);
+
+    for (;;)
+    {
+        if (token.consume("=="))
+        {
+            node = new_node(NodeKind::ND_EQ, node, relatinal(token));
+        }
+        else if (token.consume("!="))
+        {
+            node = new_node(NodeKind::ND_NE, node, relatinal(token));
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
+
+Node *relatinal(Token &token)
+{
+    Node *node = add(token);
+
+    for (;;)
+    {
+        if (token.consume("<"))
+        {
+            node = new_node(NodeKind::ND_LT, node, add(token));
+        }
+        else if (token.consume("<="))
+        {
+            node = new_node(NodeKind::ND_LE, node, add(token));
+        }
+        if (token.consume(">"))
+        {
+            node = new_node(NodeKind::ND_LT, add(token), node);
+        }
+        else if (token.consume(">="))
+        {
+            node = new_node(NodeKind::ND_LE, add(token), node);
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
+
+Node *add(Token &token)
 {
     Node *node = mul(token);
 
     for (;;)
     {
-        if (token.consume('+'))
+        if (token.consume("+"))
         {
             node = new_node(NodeKind::ND_ADD, node, mul(token));
         }
-        else if (token.consume('-'))
+        else if (token.consume("-"))
         {
             node = new_node(NodeKind::ND_SUB, node, mul(token));
         }
@@ -58,19 +128,17 @@ Node *expr(Token &token)
     }
 }
 
-Node *primary(Token &);
-Node* unary(Token&);
 Node *mul(Token &token)
 {
     Node *node = unary(token);
 
     for (;;)
     {
-        if (token.consume('*'))
+        if (token.consume("*"))
         {
             node = new_node(NodeKind::ND_MUL, node, unary(token));
         }
-        else if (token.consume('/'))
+        else if (token.consume("/"))
         {
             node = new_node(NodeKind::ND_DIV, node, unary(token));
         }
@@ -81,13 +149,13 @@ Node *mul(Token &token)
     }
 }
 
-Node* unary(Token& token)
+Node *unary(Token &token)
 {
-    if (token.consume('+'))
+    if (token.consume("+"))
     {
         return primary(token);
     }
-    if (token.consume('-'))
+    if (token.consume("-"))
     {
         return new_node(NodeKind::ND_SUB, new_node_num(0), primary(token));
     }
@@ -96,10 +164,10 @@ Node* unary(Token& token)
 
 Node *primary(Token &token)
 {
-    if (token.consume('('))
+    if (token.consume("("))
     {
         Node *node = expr(token);
-        token.expect(')');
+        token.expect(")");
         return node;
     }
 
@@ -137,6 +205,31 @@ void gen(Node &node)
         printf("    cqo\n");
         printf("    idiv rdi\n");
         break;
+
+    case NodeKind::ND_EQ:
+        printf("    cmp rax, rdi\n");
+        printf("    sete al\n");
+        printf("    movzb rax, al\n");
+        break;
+
+    case NodeKind::ND_NE:
+        printf("    cmp rax, rdi\n");
+        printf("    setne al\n");
+        printf("    movzb rax, al\n");
+        break;
+
+    case NodeKind::ND_LT:
+        printf("    cmp rax, rdi\n");
+        printf("    setl al\n");
+        printf("    movzb rax, al\n");
+        break;
+
+    case NodeKind::ND_LE:
+        printf("    cmp rax, rdi\n");
+        printf("    setle al\n");
+        printf("    movzb rax, al\n");
+        break;
+
     default:
         fprintf(stderr, "node error");
         exit(1);
@@ -161,7 +254,7 @@ int main(int argc, char **argv)
     printf(".global main\n");
     printf("main:\n");
 
-    Node* node = expr(token);
+    Node *node = expr(token);
     gen(*node);
 
     printf("    pop rax\n");
