@@ -1,29 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "Tokenizer.h"
+#include "9cc.h"
 
-enum class NodeKind
-{
-    ND_ADD,
-    ND_SUB,
-    ND_MUL,
-    ND_DIV,
-
-    ND_EQ,
-    ND_NE,
-    ND_LT,
-    ND_LE,
-
-    ND_NUM,
-};
-
-struct Node
-{
-    NodeKind kind;
-    Node *lhs;
-    Node *rhs;
-    int val;
-};
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
@@ -43,6 +19,11 @@ Node *new_node_num(int num)
 }
 
 
+
+Node* program(Token& token);
+Node* statement(Token& token);
+Node* expr(Token& token);
+Node* assign(Token& token);
 Node *equality(Token &token);
 Node *relatinal(Token &token);
 Node *add(Token &token);
@@ -172,92 +153,4 @@ Node *primary(Token &token)
     }
 
     return new_node_num(token.expect_number());
-}
-
-void gen(Node &node)
-{
-    if (node.kind == NodeKind::ND_NUM)
-    {
-        printf("    push %d\n", node.val);
-        return;
-    }
-
-    gen(*node.lhs);
-    gen(*node.rhs);
-
-    printf("    pop rdi\n");
-    printf("    pop rax\n");
-
-    switch (node.kind)
-    {
-    case NodeKind::ND_ADD:
-        printf("    add rax, rdi\n");
-        break;
-    case NodeKind::ND_SUB:
-        printf("    sub rax, rdi\n");
-        break;
-
-    case NodeKind::ND_MUL:
-        printf("    imul rax, rdi\n");
-        break;
-
-    case NodeKind::ND_DIV:
-        printf("    cqo\n");
-        printf("    idiv rdi\n");
-        break;
-
-    case NodeKind::ND_EQ:
-        printf("    cmp rax, rdi\n");
-        printf("    sete al\n");
-        printf("    movzb rax, al\n");
-        break;
-
-    case NodeKind::ND_NE:
-        printf("    cmp rax, rdi\n");
-        printf("    setne al\n");
-        printf("    movzb rax, al\n");
-        break;
-
-    case NodeKind::ND_LT:
-        printf("    cmp rax, rdi\n");
-        printf("    setl al\n");
-        printf("    movzb rax, al\n");
-        break;
-
-    case NodeKind::ND_LE:
-        printf("    cmp rax, rdi\n");
-        printf("    setle al\n");
-        printf("    movzb rax, al\n");
-        break;
-
-    default:
-        fprintf(stderr, "node error");
-        exit(1);
-        break;
-    }
-
-    printf("    push rax\n");
-}
-
-int main(int argc, char **argv)
-{
-    if (argc != 2)
-    {
-        fprintf(stderr, "引き数の個数が正しくありません。");
-        return 1;
-    }
-    char *user_input = argv[1];
-    Token token = Token(user_input);
-    token.tokenize();
-
-    printf(".intel_syntax noprefix\n");
-    printf(".global main\n");
-    printf("main:\n");
-
-    Node *node = expr(token);
-    gen(*node);
-
-    printf("    pop rax\n");
-    printf("    ret\n");
-    return 0;
 }

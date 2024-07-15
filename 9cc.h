@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -8,6 +10,7 @@
 enum class TokenKind
 {
     TK_RESERVED,
+    TK_IDENT,
     TK_NUM,
     TK_EOF,
 };
@@ -35,26 +38,42 @@ private:
 
     Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 
-    void error(const char *fmt, ...)
-    {
-        va_list ap;
-        va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        fprintf(stderr, "\n");
-        exit(1);
-    }
+    void error(const char *fmt, ...);
 
-    void error_at(const char *location, const char *fmt, ...)
-    {
-        va_list ap;
-        va_start(ap, fmt);
-
-        int pos = location - user_input;
-        fprintf(stderr, "%s\n", user_input);
-        fprintf(stderr, "%*s", pos, " ");
-        fprintf(stderr, "^ ");
-        vfprintf(stderr, fmt, ap);
-        fprintf(stderr, "\n");
-        exit(1);
-    }
+    void error_at(const char *location, const char *fmt, ...);
 };
+
+
+//parse.cpp
+enum class NodeKind
+{
+    ND_ADD,
+    ND_SUB,
+    ND_MUL,
+    ND_DIV,
+
+    ND_EQ,
+    ND_NE,
+    ND_LT,
+    ND_LE,
+
+    ND_NUM,
+};
+
+
+struct Node
+{
+    NodeKind kind;
+    Node *lhs;
+    Node *rhs;
+    int val;
+};
+
+
+Node* expr(Token& token);
+
+
+
+
+//codegen.cpp
+void gen(Node& node);

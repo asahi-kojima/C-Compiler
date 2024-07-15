@@ -1,4 +1,4 @@
-#include "Tokenizer.h"
+#include "9cc.h"
 
 void Token::tokenize()
 {
@@ -23,6 +23,13 @@ void Token::tokenize()
         {
             cur = new_token(TokenKind::TK_RESERVED, cur, p, 2);
             p += 2;
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z')
+        {
+            cur = new_token(TokenKind::TK_IDENT, cur, p++, 1);
+            cur->len = 1;
             continue;
         }
 
@@ -98,4 +105,27 @@ int Token::expect_number()
 bool Token::at_end() const
 {
     return token->mKind == TokenKind::TK_EOF;
+}
+
+void Token::error(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    exit(1);
+}
+
+void Token::error_at(const char *location, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    int pos = location - user_input;
+    fprintf(stderr, "%s\n", user_input);
+    fprintf(stderr, "%*s", pos, " ");
+    fprintf(stderr, "^ ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    exit(1);
 }
