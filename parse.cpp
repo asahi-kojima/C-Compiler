@@ -1,5 +1,6 @@
 #include "9cc.h"
 
+Node* code[100];
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
@@ -18,9 +19,17 @@ Node *new_node_num(int num)
     return node;
 }
 
+Node *new_node_lvar(int offset)
+{
+    Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+    node->kind = NodeKind::ND_LVAR;
+    node->offset = offset;
+    return node;
+}
 
 
-Node* program(Token& token);
+
+void program(Token& token);
 Node* statement(Token& token);
 Node* expr(Token& token);
 Node* assign(Token& token);
@@ -31,9 +40,40 @@ Node *mul(Token &token);
 Node *unary(Token &);
 Node *primary(Token &);
 
+void program(Token& token)
+{
+    int i = 0;
+    while(!token.at_end())
+    {
+        code[i] = statement(token);
+        i++;
+    }
+
+    code[i] = nullptr;
+}
+
+Node* statement(Token& token)
+{
+    Node* node = expr(token);
+    token.expect(";");
+    return node;
+}
+
+
 Node *expr(Token &token)
 {
+    Node *node = assign(token);
+    return node;
+}
+
+
+Node *assign(Token &token)
+{
     Node *node = equality(token);
+    if (token.consume("="))
+    {
+        node = new_node(NodeKind::ND_ASSIGN, node, assign(token));
+    }
 
     return node;
 }
@@ -150,6 +190,11 @@ Node *primary(Token &token)
         Node *node = expr(token);
         token.expect(")");
         return node;
+    }
+
+    if (int offset = -1; token.is_lvar(offset))
+    {
+        return new_node_lvar(offset);
     }
 
     return new_node_num(token.expect_number());

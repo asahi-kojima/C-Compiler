@@ -28,12 +28,12 @@ void Token::tokenize()
 
         if ('a' <= *p && *p <= 'z')
         {
-            cur = new_token(TokenKind::TK_IDENT, cur, p++, 1);
-            cur->len = 1;
+            cur = new_token(TokenKind::TK_IDENT, cur, p, 1);
+            p++;
             continue;
         }
 
-        if (strchr("+-*/()<>", *p))
+        if (strchr("+-*/()<>=;", *p))
         {
             cur = new_token(TokenKind::TK_RESERVED, cur, p, 1);
             p++;
@@ -84,7 +84,7 @@ void Token::expect(const char *op)
         strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
     {
-        error_at(token->str, "'%c'ではありません。", op);
+        error_at(token->str, "'%c'ではありません。", *op);
     }
 
     token = token->mNext;
@@ -102,19 +102,25 @@ int Token::expect_number()
     return val;
 }
 
+
+bool Token::is_lvar(int& offset)
+{
+    if (token->mKind != TokenKind::TK_IDENT)
+    {
+        return false;
+    }
+
+
+    offset = (token->str[0] - 'a' + 1) * LOCAL_VAR_SIZE;
+    token = token->mNext;
+    return true;
+}
+
 bool Token::at_end() const
 {
     return token->mKind == TokenKind::TK_EOF;
 }
 
-void Token::error(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
-    exit(1);
-}
 
 void Token::error_at(const char *location, const char *fmt, ...)
 {
