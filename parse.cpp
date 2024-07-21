@@ -32,7 +32,7 @@ LVar *find_lvar(const Token &token)
 {
     for (LVar *var = locals; var; var = var->next)
     {
-        if (var->len == token.getLen() && !memcmp(token.getStr(), var->name, var->len))
+        if (var->len == token.len && !memcmp(token.str, var->name, var->len))
         {
             return var;
         }
@@ -44,8 +44,8 @@ LVar *find_lvar(const Token &token)
 void make_new_lvar(const Token &token)
 {
     LVar *new_lvar = reinterpret_cast<LVar*>(calloc(1, sizeof(LVar)));
-    new_lvar->len = token.getLen(); 
-    new_lvar->name = token.getStr();fprintf(stderr, "%d : %c", new_lvar->len, *new_lvar->name);
+    new_lvar->len = token.len; 
+    new_lvar->name = token.str;
 
     LVar *lvar = locals;
     if (lvar)
@@ -63,18 +63,18 @@ void make_new_lvar(const Token &token)
     }
 }
 
-void program(Token &token);
-Node *statement(Token &token);
-Node *expr(Token &token);
-Node *assign(Token &token);
-Node *equality(Token &token);
-Node *relatinal(Token &token);
-Node *add(Token &token);
-Node *mul(Token &token);
-Node *unary(Token &);
-Node *primary(Token &);
+void program(TokenList &token);
+Node *statement(TokenList &token);
+Node *expr(TokenList &token);
+Node *assign(TokenList &token);
+Node *equality(TokenList &token);
+Node *relatinal(TokenList &token);
+Node *add(TokenList &token);
+Node *mul(TokenList &token);
+Node *unary(TokenList &);
+Node *primary(TokenList &);
 
-void program(Token &token)
+void program(TokenList &token)
 {
     int i = 0;
     while (!token.at_end())
@@ -86,20 +86,20 @@ void program(Token &token)
     code[i] = nullptr;
 }
 
-Node *statement(Token &token)
+Node *statement(TokenList &token)
 {
     Node *node = expr(token);
     token.expect(";");
     return node;
 }
 
-Node *expr(Token &token)
+Node *expr(TokenList &token)
 {
     Node *node = assign(token);
     return node;
 }
 
-Node *assign(Token &token)
+Node *assign(TokenList &token)
 {
     Node *node = equality(token);
     if (token.consume("="))
@@ -110,7 +110,7 @@ Node *assign(Token &token)
     return node;
 }
 
-Node *equality(Token &token)
+Node *equality(TokenList &token)
 {
     Node *node = relatinal(token);
 
@@ -131,7 +131,7 @@ Node *equality(Token &token)
     }
 }
 
-Node *relatinal(Token &token)
+Node *relatinal(TokenList &token)
 {
     Node *node = add(token);
 
@@ -160,7 +160,7 @@ Node *relatinal(Token &token)
     }
 }
 
-Node *add(Token &token)
+Node *add(TokenList &token)
 {
     Node *node = mul(token);
 
@@ -181,7 +181,7 @@ Node *add(Token &token)
     }
 }
 
-Node *mul(Token &token)
+Node *mul(TokenList &token)
 {
     Node *node = unary(token);
 
@@ -202,7 +202,7 @@ Node *mul(Token &token)
     }
 }
 
-Node *unary(Token &token)
+Node *unary(TokenList &token)
 {
     if (token.consume("+"))
     {
@@ -215,7 +215,7 @@ Node *unary(Token &token)
     return primary(token);
 }
 
-Node *primary(Token &token)
+Node *primary(TokenList &token)
 {
     if (token.consume("("))
     {
@@ -224,7 +224,7 @@ Node *primary(Token &token)
         return node;
     }
 
-    switch (token.getToken().getKind())
+    switch (token.getCurrentToken()->mKind)
     {
     case TokenKind::TK_IDENT:
     {

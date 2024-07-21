@@ -10,11 +10,10 @@ int main(int argc, char **argv)
 
     // トークンに分割する
     char *user_input = argv[1];
-    Token token = Token(user_input);
-    token.tokenize();
+    TokenList token_list = TokenList(user_input);
 
     //抽象構文木の構築
-    program(token);
+    program(token_list);
 
     //ローカル変数用のスタックのサイズを計算している。
     int local_var_stack_size = 0;

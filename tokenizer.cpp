@@ -1,10 +1,17 @@
 #include "9cc.h"
 
-void Token::tokenize()
+TokenList::TokenList(char *user_input)
+    : current_token(nullptr),
+      user_input(user_input)
+{
+    tokenize();
+}
+
+void TokenList::tokenize()
 {
     char *p = user_input;
 
-    Token head(user_input);
+    Token head;
     head.mNext = nullptr;
     Token *cur = &head;
 
@@ -64,74 +71,73 @@ void Token::tokenize()
     }
 
     new_token(TokenKind::TK_EOF, cur, p, 0);
-    token = head.mNext;
+    current_token = head.mNext;
 }
 
-Token *Token::new_token(TokenKind kind, Token *cur, char *str, int len)
+Token *TokenList::new_token(TokenKind kind, Token *cur, const char *str, int len)
 {
     Token *token = reinterpret_cast<Token *>(calloc(1, sizeof(Token)));
     token->mKind = kind;
     token->str = str;
     token->len = len;
-    token->user_input = cur->user_input;
     cur->mNext = token;
     return token;
 }
 
-bool Token::consume(const char *op)
+bool TokenList::consume(const char *op)
 {
-    if (token->mKind != TokenKind::TK_RESERVED ||
-        strlen(op) != token->len ||
-        memcmp(token->str, op, token->len))
+    if (current_token->mKind != TokenKind::TK_RESERVED ||
+        strlen(op) != current_token->len ||
+        memcmp(current_token->str, op, current_token->len))
     {
         return false;
     }
 
-    token = token->mNext;
+    current_token = current_token->mNext;
     return true;
 }
 
-void Token::expect(const char *op)
+void TokenList::expect(const char *op)
 {
-    if (token->mKind != TokenKind::TK_RESERVED ||
-        strlen(op) != token->len ||
-        memcmp(token->str, op, token->len))
+    if (current_token->mKind != TokenKind::TK_RESERVED ||
+        strlen(op) != current_token->len ||
+        memcmp(current_token->str, op, current_token->len))
     {
-        error_at(token->str, "'%c'が期待されますが、'%c'が確認されました。", *op, *token->str);
+        error_at(current_token->str, "'%c'が期待されますが、'%c'が確認されました。", *op, *current_token->str);
     }
 
-    token = token->mNext;
+    current_token = current_token->mNext;
 }
 
-int Token::expect_number()
+int TokenList::expect_number()
 {
-    if (token->mKind != TokenKind::TK_NUM)
+    if (current_token->mKind != TokenKind::TK_NUM)
     {
-        error_at(token->str, "数ではありません。");
+        error_at(current_token->str, "数ではありません。");
     }
 
-    int val = token->val;
-    token = token->mNext;
+    int val = current_token->val;
+    current_token = current_token->mNext;
     return val;
 }
 
-Token* Token::expect_lvar()
+Token *TokenList::expect_lvar()
 {
-    if (token->mKind != TokenKind::TK_IDENT)
+    if (current_token->mKind != TokenKind::TK_IDENT)
     {
-        error_at(token->str, "変数ではありません。");
+        error_at(current_token->str, "変数ではありません。");
     }
-    Token* cur = token;
-    token = token->mNext;
+    Token *cur = current_token;
+    current_token = current_token->mNext;
     return cur;
 }
 
-bool Token::at_end() const
+bool TokenList::at_end() const
 {
-    return (token->mKind == TokenKind::TK_EOF);
+    return (current_token->mKind == TokenKind::TK_EOF);
 }
 
-void Token::error_at(const char *location, const char *fmt, ...)
+void TokenList::error_at(const char *location, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

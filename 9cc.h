@@ -9,7 +9,6 @@
 
 #define LOCAL_VAR_SIZE 8
 
-
 inline void error(const char *fmt, ...)
 {
     va_list ap;
@@ -30,52 +29,39 @@ enum class TokenKind
 class Token
 {
 public:
-    Token(char* user_input) : token(nullptr) , user_input(user_input){}
-    void tokenize();
-
-    bool consume(const char* op);
-    void expect(const char* op);
-    int expect_number();
-    Token* expect_lvar();
-    bool at_end() const;
-
-    const char* getStr() const
-    {
-        return str;
-    }
-
-    int getLen() const
-    {
-        return len;
-    }
-
-    TokenKind getKind() const
-    {
-        return mKind;
-    }
-
-    const Token& getToken() const
-    {
-        return *token;
-    }
-
-private:
     TokenKind mKind;
     Token *mNext;
     int val;
     const char *str;
     int len;
-
-    Token *token;
-    char *user_input;
-
-    Token *new_token(TokenKind kind, Token *cur, char *str, int len);
-
-    void error_at(const char *location, const char *fmt, ...);
 };
 
+class TokenList
+{
+public:
+    TokenList(char *user_input);
+    void tokenize();
 
-//parse.cpp
+    bool consume(const char *op);
+    void expect(const char *op);
+    int expect_number();
+    Token *expect_lvar();
+    bool at_end() const;
+    void error_at(const char *location, const char *fmt, ...);
+
+    const Token *getCurrentToken() const
+    {
+        return current_token;
+    }
+
+private:
+    Token *current_token;
+    char *user_input;
+
+    Token *new_token(TokenKind kind, Token *cur, const char *str, int len);
+};
+
+// parse.cpp
 enum class NodeKind
 {
     ND_ADD,
@@ -95,8 +81,8 @@ enum class NodeKind
 
 struct LVar
 {
-    LVar* next;
-    const char* name;
+    LVar *next;
+    const char *name;
     int len;
     int offset;
 };
@@ -110,13 +96,9 @@ struct Node
     int offset;
 };
 
+extern LVar *locals;
+extern Node *code[];
+void program(TokenList &token_list);
 
-extern LVar* locals;
-extern Node* code[];
-void program(Token& token);
-Node* expr(Token&);
-
-
-
-//codegen.cpp
-void gen(Node& node);
+// codegen.cpp
+void gen(Node &node);
