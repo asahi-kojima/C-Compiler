@@ -43,8 +43,8 @@ LVar *find_lvar(const Token &token)
 
 void make_new_lvar(const Token &token)
 {
-    LVar *new_lvar = reinterpret_cast<LVar*>(calloc(1, sizeof(LVar)));
-    new_lvar->len = token.len; 
+    LVar *new_lvar = reinterpret_cast<LVar *>(calloc(1, sizeof(LVar)));
+    new_lvar->len = token.len;
     new_lvar->name = token.str;
 
     LVar *lvar = locals;
@@ -63,66 +63,66 @@ void make_new_lvar(const Token &token)
     }
 }
 
-void program(TokenList &token);
-Node *statement(TokenList &token);
-Node *expr(TokenList &token);
-Node *assign(TokenList &token);
-Node *equality(TokenList &token);
-Node *relatinal(TokenList &token);
-Node *add(TokenList &token);
-Node *mul(TokenList &token);
-Node *unary(TokenList &);
-Node *primary(TokenList &);
+void program(TokenList &token_list);
+Node *statement(TokenList &token_list);
+Node *expr(TokenList &token_list);
+Node *assign(TokenList &token_list);
+Node *equality(TokenList &token_list);
+Node *relatinal(TokenList &token_list);
+Node *add(TokenList &token_list);
+Node *mul(TokenList &token_list);
+Node *unary(TokenList &token_list);
+Node *primary(TokenList &token_list);
 
-void program(TokenList &token)
+void program(TokenList &token_list)
 {
     int i = 0;
-    while (!token.at_end())
+    while (!token_list.at_end())
     {
-        code[i] = statement(token);
+        code[i] = statement(token_list);
         i++;
     }
 
     code[i] = nullptr;
 }
 
-Node *statement(TokenList &token)
+Node *statement(TokenList &token_list)
 {
-    Node *node = expr(token);
-    token.expect(";");
+    Node *node = expr(token_list);
+    token_list.expect(";");
     return node;
 }
 
-Node *expr(TokenList &token)
+Node *expr(TokenList &token_list)
 {
-    Node *node = assign(token);
+    Node *node = assign(token_list);
     return node;
 }
 
-Node *assign(TokenList &token)
+Node *assign(TokenList &token_list)
 {
-    Node *node = equality(token);
-    if (token.consume("="))
+    Node *node = equality(token_list);
+    if (token_list.consume("="))
     {
-        node = new_node(NodeKind::ND_ASSIGN, node, assign(token));
+        node = new_node(NodeKind::ND_ASSIGN, node, assign(token_list));
     }
 
     return node;
 }
 
-Node *equality(TokenList &token)
+Node *equality(TokenList &token_list)
 {
-    Node *node = relatinal(token);
+    Node *node = relatinal(token_list);
 
     for (;;)
     {
-        if (token.consume("=="))
+        if (token_list.consume("=="))
         {
-            node = new_node(NodeKind::ND_EQ, node, relatinal(token));
+            node = new_node(NodeKind::ND_EQ, node, relatinal(token_list));
         }
-        else if (token.consume("!="))
+        else if (token_list.consume("!="))
         {
-            node = new_node(NodeKind::ND_NE, node, relatinal(token));
+            node = new_node(NodeKind::ND_NE, node, relatinal(token_list));
         }
         else
         {
@@ -131,27 +131,27 @@ Node *equality(TokenList &token)
     }
 }
 
-Node *relatinal(TokenList &token)
+Node *relatinal(TokenList &token_list)
 {
-    Node *node = add(token);
+    Node *node = add(token_list);
 
     for (;;)
     {
-        if (token.consume("<"))
+        if (token_list.consume("<"))
         {
-            node = new_node(NodeKind::ND_LT, node, add(token));
+            node = new_node(NodeKind::ND_LT, node, add(token_list));
         }
-        else if (token.consume("<="))
+        else if (token_list.consume("<="))
         {
-            node = new_node(NodeKind::ND_LE, node, add(token));
+            node = new_node(NodeKind::ND_LE, node, add(token_list));
         }
-        if (token.consume(">"))
+        if (token_list.consume(">"))
         {
-            node = new_node(NodeKind::ND_LT, add(token), node);
+            node = new_node(NodeKind::ND_LT, add(token_list), node);
         }
-        else if (token.consume(">="))
+        else if (token_list.consume(">="))
         {
-            node = new_node(NodeKind::ND_LE, add(token), node);
+            node = new_node(NodeKind::ND_LE, add(token_list), node);
         }
         else
         {
@@ -160,19 +160,19 @@ Node *relatinal(TokenList &token)
     }
 }
 
-Node *add(TokenList &token)
+Node *add(TokenList &token_list)
 {
-    Node *node = mul(token);
+    Node *node = mul(token_list);
 
     for (;;)
     {
-        if (token.consume("+"))
+        if (token_list.consume("+"))
         {
-            node = new_node(NodeKind::ND_ADD, node, mul(token));
+            node = new_node(NodeKind::ND_ADD, node, mul(token_list));
         }
-        else if (token.consume("-"))
+        else if (token_list.consume("-"))
         {
-            node = new_node(NodeKind::ND_SUB, node, mul(token));
+            node = new_node(NodeKind::ND_SUB, node, mul(token_list));
         }
         else
         {
@@ -181,19 +181,19 @@ Node *add(TokenList &token)
     }
 }
 
-Node *mul(TokenList &token)
+Node *mul(TokenList &token_list)
 {
-    Node *node = unary(token);
+    Node *node = unary(token_list);
 
     for (;;)
     {
-        if (token.consume("*"))
+        if (token_list.consume("*"))
         {
-            node = new_node(NodeKind::ND_MUL, node, unary(token));
+            node = new_node(NodeKind::ND_MUL, node, unary(token_list));
         }
-        else if (token.consume("/"))
+        else if (token_list.consume("/"))
         {
-            node = new_node(NodeKind::ND_DIV, node, unary(token));
+            node = new_node(NodeKind::ND_DIV, node, unary(token_list));
         }
         else
         {
@@ -202,33 +202,33 @@ Node *mul(TokenList &token)
     }
 }
 
-Node *unary(TokenList &token)
+Node *unary(TokenList &token_list)
 {
-    if (token.consume("+"))
+    if (token_list.consume("+"))
     {
-        return primary(token);
+        return primary(token_list);
     }
-    if (token.consume("-"))
+    if (token_list.consume("-"))
     {
-        return new_node(NodeKind::ND_SUB, new_node_num(0), primary(token));
+        return new_node(NodeKind::ND_SUB, new_node_num(0), primary(token_list));
     }
-    return primary(token);
+    return primary(token_list);
 }
 
-Node *primary(TokenList &token)
+Node *primary(TokenList &token_list)
 {
-    if (token.consume("("))
+    if (token_list.consume("("))
     {
-        Node *node = expr(token);
-        token.expect(")");
+        Node *node = expr(token_list);
+        token_list.expect(")");
         return node;
     }
 
-    switch (token.getCurrentToken()->mKind)
+    switch (token_list.getCurrentToken()->mKind)
     {
     case TokenKind::TK_IDENT:
     {
-        const Token& lvar_token = *token.expect_lvar();
+        const Token &lvar_token = *token_list.expect_lvar();
         LVar *lvar = find_lvar(lvar_token);
         if (lvar)
         {
@@ -244,13 +244,11 @@ Node *primary(TokenList &token)
     }
 
     case TokenKind::TK_NUM:
-        return new_node_num(token.expect_number());
+        return new_node_num(token_list.expect_number());
         break;
-    
+
     default:
         error("ここに到達することは構文違反です。\n");
         exit(1);
     }
-
-    
 }
