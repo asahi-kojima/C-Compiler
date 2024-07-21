@@ -36,12 +36,27 @@ public:
     bool consume(const char* op);
     void expect(const char* op);
     int expect_number();
-    bool is_lvar(int& offset);
+    Token* expect_lvar();
     bool at_end() const;
 
-    void setStr(const char* p)
+    const char* getStr() const
     {
-        str = p;
+        return str;
+    }
+
+    int getLen() const
+    {
+        return len;
+    }
+
+    TokenKind getKind() const
+    {
+        return mKind;
+    }
+
+    const Token& getToken() const
+    {
+        return *token;
     }
 
 private:
@@ -78,6 +93,13 @@ enum class NodeKind
     ND_LVAR,
 };
 
+struct LVar
+{
+    LVar* next;
+    const char* name;
+    int len;
+    int offset;
+};
 
 struct Node
 {
@@ -89,6 +111,7 @@ struct Node
 };
 
 
+extern LVar* locals;
 extern Node* code[];
 void program(Token& token);
 Node* expr(Token&);

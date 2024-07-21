@@ -1,3 +1,4 @@
+CC=g++
 CFLAGS=-std=c++11 -g -static
 SRCS=$(wildcard *.cpp)
 OBJS=$(SRCS:.cpp=.o)

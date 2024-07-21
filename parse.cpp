@@ -1,6 +1,7 @@
 #include "9cc.h"
 
-Node* code[100];
+LVar *locals = nullptr;
+Node *code[100];
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
@@ -27,12 +28,45 @@ Node *new_node_lvar(int offset)
     return node;
 }
 
+LVar *find_lvar(const Token &token)
+{
+    for (LVar *var = locals; var; var = var->next)
+    {
+        if (var->len == token.getLen() && !memcmp(token.getStr(), var->name, var->len))
+        {
+            return var;
+        }
+    }
 
+    return nullptr;
+}
 
-void program(Token& token);
-Node* statement(Token& token);
-Node* expr(Token& token);
-Node* assign(Token& token);
+void make_new_lvar(const Token &token)
+{
+    LVar *new_lvar = reinterpret_cast<LVar*>(calloc(1, sizeof(LVar)));
+    new_lvar->len = token.getLen(); 
+    new_lvar->name = token.getStr();fprintf(stderr, "%d : %c", new_lvar->len, *new_lvar->name);
+
+    LVar *lvar = locals;
+    if (lvar)
+    {
+        for (; lvar->next; lvar = lvar->next)
+        {
+        }
+        new_lvar->offset = lvar->offset + LOCAL_VAR_SIZE;
+        lvar->next = new_lvar;
+    }
+    else
+    {
+        new_lvar->offset = 1 * LOCAL_VAR_SIZE;
+        locals = new_lvar;
+    }
+}
+
+void program(Token &token);
+Node *statement(Token &token);
+Node *expr(Token &token);
+Node *assign(Token &token);
 Node *equality(Token &token);
 Node *relatinal(Token &token);
 Node *add(Token &token);
@@ -40,10 +74,10 @@ Node *mul(Token &token);
 Node *unary(Token &);
 Node *primary(Token &);
 
-void program(Token& token)
+void program(Token &token)
 {
     int i = 0;
-    while(!token.at_end())
+    while (!token.at_end())
     {
         code[i] = statement(token);
         i++;
@@ -52,20 +86,18 @@ void program(Token& token)
     code[i] = nullptr;
 }
 
-Node* statement(Token& token)
+Node *statement(Token &token)
 {
-    Node* node = expr(token);
+    Node *node = expr(token);
     token.expect(";");
     return node;
 }
-
 
 Node *expr(Token &token)
 {
     Node *node = assign(token);
     return node;
 }
-
 
 Node *assign(Token &token)
 {
@@ -192,10 +224,33 @@ Node *primary(Token &token)
         return node;
     }
 
-    if (int offset = -1; token.is_lvar(offset))
+    switch (token.getToken().getKind())
     {
-        return new_node_lvar(offset);
+    case TokenKind::TK_IDENT:
+    {
+        const Token& lvar_token = *token.expect_lvar();
+        LVar *lvar = find_lvar(lvar_token);
+        if (lvar)
+        {
+            return new_node_lvar(lvar->offset);
+        }
+        else
+        {
+            make_new_lvar(lvar_token);
+            LVar *lvar = find_lvar(lvar_token);
+            return new_node_lvar(lvar->offset);
+        }
+        break;
     }
 
-    return new_node_num(token.expect_number());
+    case TokenKind::TK_NUM:
+        return new_node_num(token.expect_number());
+        break;
+    
+    default:
+        error("ここに到達することは構文違反です。\n");
+        exit(1);
+    }
+
+    
 }

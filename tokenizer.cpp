@@ -28,8 +28,21 @@ void Token::tokenize()
 
         if ('a' <= *p && *p <= 'z')
         {
-            cur = new_token(TokenKind::TK_IDENT, cur, p, 1);
-            p++;
+            int len = 1;
+            while (true)
+            {
+                const char next_char = *(p + len);
+                if ('a' <= next_char && next_char <= 'z')
+                {
+                    len++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            cur = new_token(TokenKind::TK_IDENT, cur, p, len);
+            p += len;
             continue;
         }
 
@@ -84,7 +97,7 @@ void Token::expect(const char *op)
         strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
     {
-        error_at(token->str, "'%c'ではありません。", *op);
+        error_at(token->str, "'%c'が期待されますが、'%c'が確認されました。", *op, *token->str);
     }
 
     token = token->mNext;
@@ -102,25 +115,21 @@ int Token::expect_number()
     return val;
 }
 
-
-bool Token::is_lvar(int& offset)
+Token* Token::expect_lvar()
 {
     if (token->mKind != TokenKind::TK_IDENT)
     {
-        return false;
+        error_at(token->str, "変数ではありません。");
     }
-
-
-    offset = (token->str[0] - 'a' + 1) * LOCAL_VAR_SIZE;
+    Token* cur = token;
     token = token->mNext;
-    return true;
+    return cur;
 }
 
 bool Token::at_end() const
 {
-    return token->mKind == TokenKind::TK_EOF;
+    return (token->mKind == TokenKind::TK_EOF);
 }
-
 
 void Token::error_at(const char *location, const char *fmt, ...)
 {
@@ -129,7 +138,7 @@ void Token::error_at(const char *location, const char *fmt, ...)
 
     int pos = location - user_input;
     fprintf(stderr, "%s\n", user_input);
-    fprintf(stderr, "%*s", pos, " ");
+    fprintf(stderr, "%*s", pos, "");
     fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
