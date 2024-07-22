@@ -3,12 +3,14 @@
 LVar *locals = nullptr;
 Node *code[100];
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Node *ths = nullptr, Node *fhs = nullptr)
 {
     Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
     node->kind = kind;
     node->lhs = lhs;
     node->rhs = rhs;
+    node->ths = ths;
+    node->fhs = fhs;
     return node;
 }
 
@@ -88,19 +90,53 @@ void program(TokenList &token_list)
 
 Node *statement(TokenList &token_list)
 {
-    Node* node;
-    if (token_list.consume_if_return())
+    Node *node;
+    if (token_list.consume_if(TokenKind::TK_RETURN))
     {
-        node = reinterpret_cast<Node*>(calloc(1, sizeof(Node)));
+        node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
         node->kind = NodeKind::ND_RETURN;
         node->lhs = expr(token_list);
+        token_list.expect(";");
+    }
+    else if (token_list.consume_if(TokenKind::TK_IF))
+    {
+        token_list.expect("(");
+        Node *lhs = expr(token_list);
+        token_list.expect(")");
+        Node *rhs = statement(token_list);
+        if (token_list.consume_if("else"))
+        {
+            node = new_node(NodeKind::ND_IFELSE, lhs, rhs, statement(token_list));
+        }
+        else
+        {
+            node = new_node(NodeKind::ND_IF, lhs, rhs);
+        }
+    }
+    else if (token_list.consume_if(TokenKind::TK_WHILE))
+    {
+        token_list.expect("(");
+        Node *lhs = expr(token_list);
+        token_list.expect(")");
+        node = new_node(NodeKind::ND_WHILE, lhs, statement(token_list));
+    }
+    else if (token_list.consume_if(TokenKind::TK_FOR))
+    {
+        token_list.expect("(");
+        Node *initialize_term = expr(token_list);
+        token_list.expect(";");
+        Node *condition_term = expr(token_list);
+        token_list.expect(";");
+        Node *update_term = expr(token_list);
+        token_list.expect(")");
+        node = new_node(NodeKind::ND_FOR, initialize_term, condition_term, update_term, statement(token_list));
     }
     else
     {
         node = expr(token_list);
+        token_list.expect(";");
     }
 
-    token_list.expect(";");
     return node;
 }
 

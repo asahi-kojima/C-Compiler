@@ -21,6 +21,9 @@ inline void error(const char *fmt, ...)
 enum class TokenKind
 {
     TK_RESERVED,
+    TK_IF,
+    TK_WHILE,
+    TK_FOR,
     TK_RETURN,
     TK_IDENT,
     TK_NUM,
@@ -44,7 +47,8 @@ public:
     void tokenize();
 
     bool consume(const char *op);
-    bool consume_if_return();
+    bool consume_if(const char*);
+    bool consume_if(TokenKind);
     void expect(const char *op);
     int expect_number();
     Token *expect_lvar();
@@ -81,6 +85,11 @@ enum class NodeKind
     ND_LVAR,
 
     ND_RETURN,
+
+    ND_IF,
+    ND_IFELSE,
+    ND_WHILE,
+    ND_FOR,
 };
 
 struct LVar
@@ -96,6 +105,8 @@ struct Node
     NodeKind kind;
     Node *lhs;
     Node *rhs;
+    Node *ths;//third hs
+    Node *fhs;//fourth hs
     int val;
     int offset;
 };

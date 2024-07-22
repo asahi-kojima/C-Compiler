@@ -13,8 +13,10 @@ void gen_lval(Node &node)
     printf("    push rax\n");
 }
 
+
 void gen(Node &node)
 {
+    static int label_identifier = 0;
     switch (node.kind)
     {
     case NodeKind::ND_NUM:
@@ -43,6 +45,59 @@ void gen(Node &node)
         printf("    mov rsp, rbp\n");
         printf("    pop rbp\n");
         printf("    ret\n");
+        return;
+
+    case NodeKind::ND_IFELSE:
+        gen(*node.lhs);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lelse%d\n", label_identifier);
+        gen(*node.rhs);
+        printf("    jmp .Lend%d\n", label_identifier);
+        printf(".Lelse%d:\n", label_identifier);
+        gen(*node.ths);
+        printf(".Lend%d:\n", label_identifier);
+        label_identifier++;
+
+        return;
+    
+    case NodeKind::ND_IF:
+        gen(*node.lhs);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", label_identifier);
+        gen(*node.rhs);
+        printf(".Lend%d:\n", label_identifier);
+        label_identifier++;
+
+        return;
+
+    case NodeKind::ND_WHILE:
+        printf(".Lbegin%d:\n", label_identifier);
+        gen(*node.lhs);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", label_identifier);
+        gen(*node.rhs);
+        printf("    jmp .Lbegin%d\n", label_identifier);
+        printf(".Lend%d:\n", label_identifier);
+        label_identifier++;
+
+        return;
+
+    case NodeKind::ND_FOR:
+        gen(*node.lhs);
+        printf(".Lbegin%d:\n", label_identifier);
+        gen(*node.rhs);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", label_identifier);
+        gen(*node.fhs);
+        gen(*node.ths);
+        printf("    jmp .Lbegin%d\n", label_identifier);
+        printf(".Lend%d\n", label_identifier);
+        label_identifier++;
+
         return;
     }
 

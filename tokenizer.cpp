@@ -8,7 +8,6 @@ namespace
     }
 }
 
-
 TokenList::TokenList(char *user_input)
     : current_token(nullptr),
       user_input(user_input)
@@ -36,6 +35,30 @@ void TokenList::tokenize()
         {
             cur = new_token(TokenKind::TK_RETURN, cur, p, 6);
             p += 6;
+            continue;
+        }
+
+        
+        if (const int len_of_if = 2; strncmp(p, "if", len_of_if) == 0 && !is_part_of_string(p[len_of_if]))
+        {
+            cur = new_token(TokenKind::TK_IF, cur, p, len_of_if);
+            p += len_of_if;
+            continue;
+        }
+
+       
+        if (const int len_of_while = 5; strncmp(p, "while", len_of_while) == 0 && !is_part_of_string(p[len_of_while]))
+        {
+            cur = new_token(TokenKind::TK_WHILE, cur, p, len_of_while);
+            p += len_of_while;
+            continue;
+        }
+
+        
+        if (const int len_of_for = 3; strncmp(p, "for", len_of_for) == 0 && !is_part_of_string(p[len_of_for]))
+        {
+            cur = new_token(TokenKind::TK_FOR, cur, p, len_of_for);
+            p += len_of_for;
             continue;
         }
 
@@ -112,9 +135,21 @@ bool TokenList::consume(const char *op)
     current_token = current_token->mNext;
     return true;
 }
-bool TokenList::consume_if_return()
+
+bool TokenList::consume_if(TokenKind kind)
 {
-    if (current_token->mKind != TokenKind::TK_RETURN)
+    if (current_token->mKind != kind)
+    {
+        return false;
+    }
+
+    current_token = current_token->mNext;
+    return true;
+}
+
+bool TokenList::consume_if(const char* token)
+{
+    if (current_token->len != strlen(token) || memcmp(current_token->str, token, current_token->len))
     {
         return false;
     }
