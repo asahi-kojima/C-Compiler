@@ -88,7 +88,18 @@ void program(TokenList &token_list)
 
 Node *statement(TokenList &token_list)
 {
-    Node *node = expr(token_list);
+    Node* node;
+    if (token_list.consume_if_return())
+    {
+        node = reinterpret_cast<Node*>(calloc(1, sizeof(Node)));
+        node->kind = NodeKind::ND_RETURN;
+        node->lhs = expr(token_list);
+    }
+    else
+    {
+        node = expr(token_list);
+    }
+
     token_list.expect(";");
     return node;
 }

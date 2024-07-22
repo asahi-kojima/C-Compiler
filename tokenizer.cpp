@@ -1,5 +1,14 @@
 #include "9cc.h"
 
+namespace
+{
+    bool is_part_of_string(const char c)
+    {
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || (c == '_');
+    }
+}
+
+
 TokenList::TokenList(char *user_input)
     : current_token(nullptr),
       user_input(user_input)
@@ -20,6 +29,13 @@ void TokenList::tokenize()
         if (isspace(*p))
         {
             p++;
+            continue;
+        }
+
+        if (strncmp(p, "return", 6) == 0 && !is_part_of_string(p[6]))
+        {
+            cur = new_token(TokenKind::TK_RETURN, cur, p, 6);
+            p += 6;
             continue;
         }
 
@@ -89,6 +105,16 @@ bool TokenList::consume(const char *op)
     if (current_token->mKind != TokenKind::TK_RESERVED ||
         strlen(op) != current_token->len ||
         memcmp(current_token->str, op, current_token->len))
+    {
+        return false;
+    }
+
+    current_token = current_token->mNext;
+    return true;
+}
+bool TokenList::consume_if_return()
+{
+    if (current_token->mKind != TokenKind::TK_RETURN)
     {
         return false;
     }

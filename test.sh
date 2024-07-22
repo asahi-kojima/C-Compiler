@@ -48,5 +48,7 @@ assert 3 "a = 1;b = 2;c = 3;"
 assert 3 "a = 1;aa = 2;aaa = 3;"
 assert 2 "a = 1; a + 1;"
 assert 123 "b = 456; a = b = 123;"
+assert 123 "1;return 123; 1;"
+assert 123 "1;return 123;return 456;  1;"
 
 echo OK
