@@ -1,14 +1,16 @@
 #!/bin/bash
 
 assert(){
+    echo "========================================================"
+
     expected="$1"
     input="$2"
 
     ./9cc "$input" > tmp.s
-    gcc -o tmp tmp.s
+    gcc -o tmp tmp.s func_example.cpp
     ./tmp
     actual="$?"
-
+    
     if [ "$actual" = "$expected" ]; then
         echo -e "$input => $actual"
     else
@@ -56,6 +58,39 @@ assert 44 "if (1 == 0) 123; else 44;"
 assert 123 "x = 1;if (x == 1) 123; else 44;"
 assert 123 "x = 1; y = x; if (x == y) 123; else 44;"
 assert 10 "x = 1; while(x < 10) x = x + 1;"
-assert 10 "x = 1; for (x = 1; x < 10; 1 == 1) x = x + 1; x; "
+
+assert 20 "
+x = 1; 
+for (x = 1; x < 20; 1 == 1) 
+    x = x + 1; 
+x; "
+
+assert 17 "
+x=1;
+while(x <= 10)
+{
+    x = x+7;
+    x = x+1;
+}"
+
+assert 1 "
+{
+    x = 1; 
+    y = 1; 
+    z = x;
+}"
+
+assert 1 "
+foo();
+1;
+"
+
+assert 4 "
+x = add2(1, 3);
+"
+
+assert 5 "
+x = add3(1, 3, 1);
+"
 
 echo OK

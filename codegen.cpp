@@ -95,9 +95,40 @@ void gen(Node &node)
         gen(*node.fhs);
         gen(*node.ths);
         printf("    jmp .Lbegin%d\n", label_identifier);
-        printf(".Lend%d\n", label_identifier);
+        printf(".Lend%d:\n", label_identifier);
         label_identifier++;
 
+        return;
+
+    case NodeKind::ND_BLOCK:
+        printf("    push 1\n");
+        for (const auto& child : node.node_in_block)
+        {
+            printf("    pop rax\n");
+            gen(*child);
+        }
+
+        return;
+
+    //関数コール
+    case NodeKind::ND_FUNCCALL:
+        const char* register_name_tbl[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+        for (int i = 0;const auto& child : node.args)
+        {
+            if (i >= 6)
+            {
+                fprintf(stderr, "関数の引数が多すぎます。現在の実装では６個までです。\n");
+                exit(1);
+            }
+            gen(*child);
+            printf("    pop %s\n", register_name_tbl[i]);
+
+            i++;
+        }
+
+        //RSPを16バイトアライメントに揃える
+        printf("    call %s\n", node.str);
+        printf("    push rax\n");
         return;
     }
 

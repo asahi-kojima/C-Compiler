@@ -72,13 +72,13 @@ void TokenList::tokenize()
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z')
+        if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z'))
         {
             int len = 1;
             while (true)
             {
                 const char next_char = *(p + len);
-                if ('a' <= next_char && next_char <= 'z')
+                if (is_part_of_string(next_char))
                 {
                     len++;
                 }
@@ -92,7 +92,7 @@ void TokenList::tokenize()
             continue;
         }
 
-        if (strchr("+-*/()<>=;", *p))
+        if (strchr("+-*/()<>=;{},", *p))
         {
             cur = new_token(TokenKind::TK_RESERVED, cur, p, 1);
             p++;
@@ -106,7 +106,7 @@ void TokenList::tokenize()
             continue;
         }
 
-        error_at(p, "トークナイズ出来ませんでした。");
+        error_at(p, "%cをトークナイズ出来ませんでした。", *p);
     }
 
     new_token(TokenKind::TK_EOF, cur, p, 0);

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
+#include <iostream>
 
 #define LOCAL_VAR_SIZE 8
 
@@ -90,6 +92,10 @@ enum class NodeKind
     ND_IFELSE,
     ND_WHILE,
     ND_FOR,
+
+    ND_BLOCK,
+
+    ND_FUNCCALL,
 };
 
 struct LVar
@@ -109,6 +115,11 @@ struct Node
     Node *fhs;//fourth hs
     int val;
     int offset;
+
+    const char* str;
+
+    std::vector<Node*> node_in_block;
+    std::vector<Node*> args;
 };
 
 extern LVar *locals;

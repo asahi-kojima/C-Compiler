@@ -1,10 +1,10 @@
 CC=g++
-CFLAGS=-std=c++11 -g -static
-SRCS=$(wildcard *.cpp)
+CFLAGS=-std=c++20 -g -static
+SRCS=$(filter-out func_example.cpp , $(wildcard *.cpp))
 OBJS=$(SRCS:.cpp=.o)
 
 9cc: $(OBJS)
-	$(CC) -o 9cc $(OBJS) $(LDFLAGS)
+	$(CC) -o 9cc $(CFLAGS) $(OBJS)
 
 $(OBJS): 9cc.h
 

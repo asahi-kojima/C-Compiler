@@ -131,6 +131,17 @@ Node *statement(TokenList &token_list)
         token_list.expect(")");
         node = new_node(NodeKind::ND_FOR, initialize_term, condition_term, update_term, statement(token_list));
     }
+    else if (token_list.consume("{"))
+    {
+        node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+        node->kind = NodeKind::ND_BLOCK;
+        node->node_in_block.clear();
+        do
+        {
+            Node *node_in_block = statement(token_list);
+            node->node_in_block.push_back(node_in_block);
+        } while (!token_list.consume("}"));
+    }
     else
     {
         node = expr(token_list);
@@ -276,6 +287,29 @@ Node *primary(TokenList &token_list)
     case TokenKind::TK_IDENT:
     {
         const Token &lvar_token = *token_list.expect_lvar();
+
+        if (token_list.consume("("))
+        {
+            Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+            node->kind = NodeKind::ND_FUNCCALL;
+            char *str = new char[lvar_token.len + 1];
+            str[lvar_token.len] = '\0';
+            memcpy(str, lvar_token.str, lvar_token.len);
+            node->str = str;
+
+            for (int i = 0; !token_list.consume(")"); i++)
+            {
+                if (i != 0)
+                {
+                    token_list.expect(",");
+                }
+                Node *arg = expr(token_list);
+                node->args.push_back(arg);
+            }
+
+            return node;
+        }
+
         LVar *lvar = find_lvar(lvar_token);
         if (lvar)
         {
@@ -295,7 +329,7 @@ Node *primary(TokenList &token_list)
         break;
 
     default:
-        error("ここに到達することは構文違反です。\n");
+        error("ここに到達することは構文違反です。現在のトークンは%cです。\n", *token_list.getCurrentToken()->str);
         exit(1);
     }
 }
