@@ -125,22 +125,24 @@ void gen(Node &node)
 
             i++;
         }
-        printf("    push 1\n");
+
         //RSPを16バイトアライメントに揃える
+        //まずアライメントが維持されているかチェック
         printf("    mov rax, rsp\n");
         printf("    and rax, 0xf\n");
         printf("    test rax, rax\n");
+        //されていれば以下はスキップ
         printf("    jz .Laligned\n");
+        //補正して関数呼び出し
         printf("    sub rsp, 8\n");
         printf("    call %s\n", node.str);
+        //補正した分を戻す
         printf("    add rsp, 8\n");
-        printf("    pop rdi\n");
-        printf("    push rax\n");
         printf("    jmp .Lnotaligned\n");
         printf(".Laligned:\n");
         printf("    call %s\n", node.str);
-        printf("    push rax\n");
         printf(".Lnotaligned:\n");
+        printf("    push rax\n");
         return;
     }
 

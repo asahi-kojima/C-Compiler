@@ -93,4 +93,8 @@ assert 5 "
 x = add3(1, 3, 1);
 "
 
+assert 8 "
+x = add4(3, 1, 3, 1);
+"
+
 echo OK
