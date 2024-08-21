@@ -1,67 +1,74 @@
 #include "9cc.h"
 
-LVar *locals = nullptr;
-Node *code[100];
+static std::string current_function_name;
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Node *ths = nullptr, Node *fhs = nullptr)
-{
-    Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
-    node->kind = kind;
-    node->lhs = lhs;
-    node->rhs = rhs;
-    node->ths = ths;
-    node->fhs = fhs;
-    return node;
-}
+std::map<std::string, int> function_argumentnum_table;
+std::map<std::string, LVar *> function_lvar_table;
+std::map<std::string, std::vector<Node *>> function_code_table;
 
-Node *new_node_num(int num)
+namespace
 {
-    Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
-    node->kind = NodeKind::ND_NUM;
-    node->val = num;
-    return node;
-}
 
-Node *new_node_lvar(int offset)
-{
-    Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
-    node->kind = NodeKind::ND_LVAR;
-    node->offset = offset;
-    return node;
-}
-
-LVar *find_lvar(const Token &token)
-{
-    for (LVar *var = locals; var; var = var->next)
+    Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Node *ths = nullptr, Node *fhs = nullptr)
     {
-        if (var->len == token.len && !memcmp(token.str, var->name, var->len))
-        {
-            return var;
-        }
+        Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+        node->kind = kind;
+        node->lhs = lhs;
+        node->rhs = rhs;
+        node->ths = ths;
+        node->fhs = fhs;
+        return node;
     }
 
-    return nullptr;
-}
-
-void make_new_lvar(const Token &token)
-{
-    LVar *new_lvar = reinterpret_cast<LVar *>(calloc(1, sizeof(LVar)));
-    new_lvar->len = token.len;
-    new_lvar->name = token.str;
-
-    LVar *lvar = locals;
-    if (lvar)
+    Node *new_node_num(int num)
     {
-        for (; lvar->next; lvar = lvar->next)
-        {
-        }
-        new_lvar->offset = lvar->offset + LOCAL_VAR_SIZE;
-        lvar->next = new_lvar;
+        Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+        node->kind = NodeKind::ND_NUM;
+        node->val = num;
+        return node;
     }
-    else
+
+    Node *new_node_lvar(int offset)
     {
-        new_lvar->offset = 1 * LOCAL_VAR_SIZE;
-        locals = new_lvar;
+        Node *node = reinterpret_cast<Node *>(calloc(1, sizeof(Node)));
+        node->kind = NodeKind::ND_LVAR;
+        node->offset = offset;
+        return node;
+    }
+
+    LVar *find_lvar(const Token &token)
+    {
+        for (LVar *var = function_lvar_table[current_function_name]; var; var = var->next)
+        {
+            if (var->len == token.len && !memcmp(token.str, var->name, var->len))
+            {
+                return var;
+            }
+        }
+
+        return nullptr;
+    }
+
+    void make_new_lvar(const Token &token)
+    {
+        LVar *new_lvar = reinterpret_cast<LVar *>(calloc(1, sizeof(LVar)));
+        new_lvar->len = token.len;
+        new_lvar->name = token.str;
+
+        LVar *lvar = function_lvar_table[current_function_name];
+        if (lvar)
+        {
+            for (; lvar->next; lvar = lvar->next)
+            {
+            }
+            new_lvar->offset = lvar->offset + LOCAL_VAR_SIZE;
+            lvar->next = new_lvar;
+        }
+        else
+        {
+            new_lvar->offset = 1 * LOCAL_VAR_SIZE;
+            function_lvar_table[current_function_name] = new_lvar;
+        }
     }
 }
 
@@ -78,14 +85,65 @@ Node *primary(TokenList &token_list);
 
 void program(TokenList &token_list)
 {
-    int i = 0;
+    // 関数名(引数){関数定義}の順になっているはず
     while (!token_list.at_end())
     {
-        code[i] = statement(token_list);
-        i++;
-    }
+        // 関数名が来るはず
+        const Token &current = *token_list.getCurrentToken();
+        if (token_list.consume_if(TokenKind::TK_IDENT))
+        {
+            // 現在解析している関数名を静的変数に格納して後続の処理でも参照できるようにする
+            current_function_name = std::string(current.str, current.len);
 
-    code[i] = nullptr;
+            // 引数が来るはず
+            token_list.consume("(");
+            int argument_no = 0;
+            for (; !token_list.consume_if(")"); argument_no++)
+            {
+                if (argument_no >= 6)
+                {
+                    fprintf(stderr, "arguments must be less than 6.\n");
+                    exit(1);
+                }
+
+                if (argument_no != 0)
+                {
+                    token_list.expect(",");
+                }
+
+                const auto &lvar_token = *token_list.expect_lvar();
+                LVar *lvar = find_lvar(lvar_token);
+                if (lvar)
+                {
+                    fprintf(stderr, "argument symbol overlapping.\n");
+                    exit(1);
+                }
+                else
+                {
+                    make_new_lvar(lvar_token);
+                }
+            }
+            function_argumentnum_table[current_function_name] = argument_no;
+
+            function_lvar_table[current_function_name] = nullptr;
+
+            token_list.consume("{");
+            // 関数定義
+            std::vector<Node *> codes;
+            while (!token_list.consume_if("}"))
+            {
+                codes.push_back(statement(token_list));
+            }
+            codes.push_back(nullptr);
+
+            function_code_table[current_function_name] = std::move(codes);
+        }
+        else
+        {
+            printf("function name must come.\n");
+            exit(1);
+        }
+    }
 }
 
 Node *statement(TokenList &token_list)

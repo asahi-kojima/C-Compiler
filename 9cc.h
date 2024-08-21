@@ -8,8 +8,12 @@
 #include <string.h>
 #include <vector>
 #include <iostream>
+#include <map>
+
 
 #define LOCAL_VAR_SIZE 8
+
+extern const char* register_name_tbl[];
 
 inline void error(const char *fmt, ...)
 {
@@ -122,8 +126,13 @@ struct Node
     std::vector<Node*> args;
 };
 
-extern LVar *locals;
-extern Node *code[];
+
+
+extern std::map<std::string, int> function_argumentnum_table;
+//関数名と関数内で定義されたローカル変数がマップされている。
+extern std::map<std::string, LVar*> function_lvar_table;
+//関数名と関数定義がマップされている。
+extern std::map<std::string, std::vector<Node*> > function_code_table;
 void program(TokenList &token_list);
 
 // codegen.cpp

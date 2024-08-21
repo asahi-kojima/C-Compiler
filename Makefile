@@ -8,6 +8,9 @@ OBJS=$(SRCS:.cpp=.o)
 
 $(OBJS): 9cc.h
 
+%.o : %.cpp 9cc.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
 test: 9cc
 	./test.sh
 

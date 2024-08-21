@@ -204,6 +204,7 @@ void TokenList::error_at(const char *location, const char *fmt, ...)
     va_start(ap, fmt);
 
     int pos = location - user_input;
+    user_input[pos + 1] = '\0';
     fprintf(stderr, "%s\n", user_input);
     fprintf(stderr, "%*s", pos, "");
     fprintf(stderr, "^ ");

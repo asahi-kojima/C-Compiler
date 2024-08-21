@@ -1,18 +1,20 @@
 
 #include "9cc.h"
 
+const char *register_name_tbl[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 void gen_lval(Node &node)
 {
     if (node.kind != NodeKind::ND_LVAR)
     {
         error("代入の左辺値が変数ではありません。");
     }
-
+    printf("#in gen_lval\n");
     printf("    mov rax, rbp\n");
     printf("    sub rax, %d\n", node.offset);
     printf("    push rax\n");
+    printf("#out gen_lval\n");
 }
-
 
 void gen(Node &node)
 {
@@ -60,7 +62,7 @@ void gen(Node &node)
         label_identifier++;
 
         return;
-    
+
     case NodeKind::ND_IF:
         gen(*node.lhs);
         printf("    pop rax\n");
@@ -101,19 +103,25 @@ void gen(Node &node)
         return;
 
     case NodeKind::ND_BLOCK:
-        printf("    push 1\n");
-        for (const auto& child : node.node_in_block)
+    {
+        int no_in_block = 0;
+        for (const auto &child : node.node_in_block)
         {
-            printf("    pop rax\n");
+            if (no_in_block != 0)
+            {
+                printf("    pop rax\n");
+            }
+            no_in_block++;
+
             gen(*child);
         }
 
         return;
-
-    //関数コール
+    }
+    
+    // 関数コール
     case NodeKind::ND_FUNCCALL:
-        const char* register_name_tbl[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-        for (int i = 0;const auto& child : node.args)
+        for (int i = 0; const auto &child : node.args)
         {
             if (i >= 6)
             {
@@ -126,17 +134,17 @@ void gen(Node &node)
             i++;
         }
 
-        //RSPを16バイトアライメントに揃える
-        //まずアライメントが維持されているかチェック
+        // RSPを16バイトアライメントに揃える
+        // まずアライメントが維持されているかチェック
         printf("    mov rax, rsp\n");
         printf("    and rax, 0xf\n");
         printf("    test rax, rax\n");
-        //されていれば以下はスキップ
+        // されていれば以下はスキップ
         printf("    jz .Laligned\n");
-        //補正して関数呼び出し
+        // 補正して関数呼び出し
         printf("    sub rsp, 8\n");
         printf("    call %s\n", node.str);
-        //補正した分を戻す
+        // 補正した分を戻す
         printf("    add rsp, 8\n");
         printf("    jmp .Lnotaligned\n");
         printf(".Laligned:\n");
