@@ -1,15 +1,21 @@
 CC=g++
-CFLAGS=-std=c++20 -g -static
+CFLAGS=-std=c++17 -g -static
 # SRCS=$(filter-out func_example.cpp , $(wildcard *.cpp))
 # OBJS=$(SRCS:.cpp=.o)
 
-compiler.out: essential.h main.cpp
-	g++ -o compiler.out main.cpp
+compiler.out: main.o tokenizer.o
+	g++ $(CFLAGS) -o $@ main.o tokenizer.o
+
+main.o: main.cpp essential.h tokenizer.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+tokenizer.o: tokenizer.cpp tokenizer.h essential.h
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 test: compiler.out
 	bash ./test.sh
 
 clean:
-	rm -f 9cc *.o *~ tmp*
+	rm -f *.out *.o *~ tmp*
 
 .PHONY: test clean
