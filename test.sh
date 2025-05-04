@@ -10,8 +10,8 @@ assert(){
     ./compiler.out "$input" > tmp.s
 
     echo "compile finish!"
-    gcc -o tmp tmp.s
-    
+    gcc -o tmp -z noexecstack tmp.s
+
     if [ "$?" -ne 0 ]; then
         echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         echo "Error : failed to convert object file from assembly file!"
