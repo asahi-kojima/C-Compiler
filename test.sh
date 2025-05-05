@@ -8,6 +8,12 @@ assert(){
 
     echo "now compiling..."
     ./compiler.out "$input" > tmp.s
+    if [ "$?" -ne 0 ]; then
+        echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        echo "Error : failed to compile your code!"
+        echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        exit 1
+    fi
 
     echo "compile finish!"
     gcc -o tmp -z noexecstack tmp.s
@@ -19,6 +25,7 @@ assert(){
 
         echo "--- assembly file ---"
         cat ./tmp.s
+        echo "---------------------"
         exit 1
     fi
     ./tmp
@@ -27,8 +34,7 @@ assert(){
     if [ "$actual" = "$expected" ]; then
         echo -e "OK : $input => $actual"
     else
-        echo -e "Error : $input => $expected expected, but got $actual\n"
-        cat ./tmp.s
+        echo -e "Error : $input => $expected expected, but got $actual"
         exit 1
     fi
 }
