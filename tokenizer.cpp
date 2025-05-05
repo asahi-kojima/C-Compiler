@@ -110,7 +110,9 @@ bool TokenStream::consume_if(const char* str)
 {
     const Token& current_token = *m_current_token_iter;
     
-    if (current_token.token_kind != TokenKind::TK_RESERVED || current_token.property.of_string.str[0] != str[0])
+    if (current_token.token_kind != TokenKind::TK_RESERVED
+        || current_token.property.of_string.len != strlen(str)
+        || memcmp(current_token.property.of_string.str, str, current_token.property.of_string.len))
     {
         return false;
     }
