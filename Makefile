@@ -15,6 +15,9 @@ tokenizer.o: tokenizer.cpp tokenizer.h essential.h
 test: compiler.out
 	bash ./test.sh
 
+test-on-docker:
+	docker compose -f DockerEnv/docker-compose.yml up
+
 clean:
 	rm -f *.out *.o *~ tmp*
 
