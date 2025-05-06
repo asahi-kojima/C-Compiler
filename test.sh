@@ -6,7 +6,6 @@ assert(){
     expected="$1"
     input="$2"
 
-    echo "now compiling..."
     ./compiler.out "$input" > tmp.s
     if [ "$?" -ne 0 ]; then
         echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -15,7 +14,6 @@ assert(){
         exit 1
     fi
 
-    echo "compile finish!"
     gcc -o tmp -z noexecstack tmp.s
 
     if [ "$?" -ne 0 ]; then
@@ -44,3 +42,5 @@ assert 1 "1"
 assert 2 "1 + 1"
 assert 0 "123 - 123"
 assert 3 "1 + 2 + 3 - 2 - 1"
+
+echo "========================================================"
