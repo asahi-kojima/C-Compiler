@@ -50,21 +50,37 @@ AstNode* Parser::expr()
 
 AstNode* Parser::mul()
 {
-    AstNode* node = primary();
+    AstNode* node = unary();
     while(true)
     {
         if (m_token_stream_ptr->consume_if("*"))
         {
-            node = make_new_node(AstNodeKind::ND_MUL, node, primary());
+            node = make_new_node(AstNodeKind::ND_MUL, node, unary());
         }
         else if (m_token_stream_ptr->consume_if("/"))
         {
-            node = make_new_node(AstNodeKind::ND_DIV, node, primary());
+            node = make_new_node(AstNodeKind::ND_DIV, node, unary());
         }
         else
         {
             return node;
         }
+    }
+}
+
+AstNode* Parser::unary()
+{
+    if (m_token_stream_ptr->consume_if("+"))
+    {
+        return primary();
+    }
+    else if (m_token_stream_ptr->consume_if("-"))
+    {
+        return make_new_node(AstNodeKind::ND_SUB, make_new_node_of_num(0), primary());
+    }
+    else
+    {
+        return primary();
     }
 }
 

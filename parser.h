@@ -33,6 +33,7 @@ public:
 
     AstNode* expr();
     AstNode* mul();
+    AstNode* unary();
     AstNode* primary();
 
 private:
