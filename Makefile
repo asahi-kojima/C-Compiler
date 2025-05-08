@@ -4,7 +4,7 @@ CFLAGS=-std=c++17 -g -static
 # OBJS=$(SRCS:.cpp=.o)
 
 compiler.out: main.o tokenizer.o parser.o code-generator.o
-	g++ $(CFLAGS) -o $@ *.o
+	$(CC) $(CFLAGS) -o $@ *.o
 
 main.o: main.cpp essential.h tokenizer.h parser.h code-generator.h
 	$(CC) $(CFLAGS) -o $@ -c $<
