@@ -9,6 +9,12 @@ enum class AstNodeKind
     ND_SUB,
     ND_MUL,
     ND_DIV,
+
+    ND_EQ,
+    ND_NE,
+    ND_LT,
+    ND_LE,
+
     ND_NUM,
 };
 
@@ -32,6 +38,9 @@ public:
     : m_token_stream_ptr(token_stream_ptr){}
 
     AstNode* expr();
+    AstNode* equality();
+    AstNode* relational();
+    AstNode* add();
     AstNode* mul();
     AstNode* unary();
     AstNode* primary();

@@ -30,6 +30,59 @@ AstNode* make_new_node_of_num(s32 value)
 
 AstNode* Parser::expr()
 {
+    return equality();
+}
+
+AstNode* Parser::equality()
+{
+    AstNode* node = relational();
+    while(true)
+    {
+        if (m_token_stream_ptr->consume_if("=="))
+        {
+            node = make_new_node(AstNodeKind::ND_EQ, node, relational());
+        }
+        else if (m_token_stream_ptr->consume_if("!="))
+        {
+            node = make_new_node(AstNodeKind::ND_NE, node, relational());
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
+
+AstNode* Parser::relational()
+{
+    AstNode* node = add();
+    while(true)
+    {
+        if (m_token_stream_ptr->consume_if("<"))
+        {
+            node = make_new_node(AstNodeKind::ND_LT, node, add());
+        }
+        else if (m_token_stream_ptr->consume_if("<="))
+        {
+            node = make_new_node(AstNodeKind::ND_LE, node, add());
+        }
+        else if (m_token_stream_ptr->consume_if(">"))
+        {
+            node = make_new_node(AstNodeKind::ND_LE, add(), node);
+        }
+        else if (m_token_stream_ptr->consume_if(">="))
+        {
+            node = make_new_node(AstNodeKind::ND_LE, add(), node);
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
+
+AstNode* Parser::add()
+{
     AstNode* node = mul();
     while(true)
     {
