@@ -80,6 +80,18 @@ void TokenStream::tokenize()
             continue;
         }
 
+        if (!memcmp(p, "==", 2) || !memcmp(p, "!=", 2) || !memcmp(p, "<=", 2) || !memcmp(p, ">=", 2))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = 2;
+            }
+            m_token_list.emplace_back(Token(TokenKind::TK_RESERVED, p, property));
+            p+=2;
+            continue;
+        }
+
         if (strchr("+-*/()<>=;", *p))
         {
             Token::TokenProperty property;
