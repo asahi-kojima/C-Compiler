@@ -15,6 +15,9 @@ enum class AstNodeKind
     ND_LT,
     ND_LE,
 
+    ND_ASSIGN,
+    ND_LVAR,
+
     ND_NUM,
 };
 
@@ -28,6 +31,7 @@ struct AstNode
     union 
     {
         struct {s32 value;} of_num;
+        struct {const char* name;} of_ident;
     } property;
 };
 
@@ -37,7 +41,10 @@ public:
     Parser(TokenStream* token_stream_ptr)
     : m_token_stream_ptr(token_stream_ptr){}
 
+    std::vector<AstNode*> program();
+    AstNode* statement();
     AstNode* expr();
+    AstNode* assign();
     AstNode* equality();
     AstNode* relational();
     AstNode* add();
