@@ -35,6 +35,10 @@ struct Token
     : token_kind(kind)
     , token_position_in_input_string(token_position_in_input_string)
     , property(property){}
+
+    Token(TokenKind kind, const char* token_position_in_input_string)
+    : token_kind(kind)
+    , token_position_in_input_string(token_position_in_input_string){}
 };
 
 class TokenStream
@@ -51,7 +55,11 @@ public:
     //現在のトークンが数字である事を確認する。
     s32 expect_number();
 
-    Token get_current_token() const;
+    //現在のトークンを読み飛ばす。
+    void skip();
+
+    //現在のトークンのポインタを取得する:トークンの情報が必要な場合に利用する。
+    Token* get_current_token_ptr() const;
 
     //トークン列が終了か判定する。
     bool at_end() const;

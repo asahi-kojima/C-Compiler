@@ -13,18 +13,31 @@ int main(int argc, char** argv)
     }
 
     TokenStream token_stream(argv[1]);
-    
+
     Parser parser(&token_stream);
-    AstNode* node = parser.expr();
+    std::vector<AstNode*> nodes = parser.program();
 
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
+
+    //main関数のブロック
     printf("main:\n");
+    {
+        //プロローグ
+        printf("    push rbp\n");
+        printf("    mov rbp, rsp\n");
+        printf("    sub rsp, 208\n");
+        
+        for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
+        {
+            GenerateAssemblyCode(*iter);
+            printf("    pop rax\n");
+        }
 
-    GenerateAssemblyCode(node);
-
-    printf("    pop rax\n");
-    printf("    ret\n");
-
+        //エピローグ
+        printf("    mov rsp, rbp\n");
+        printf("    pop rbp\n");
+        printf("    ret\n");
+    }
     return 0;
 }

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++17 -g -static
+CFLAGS=-std=c++17 -g -static -Wall
 # SRCS=$(filter-out func_example.cpp , $(wildcard *.cpp))
 # OBJS=$(SRCS:.cpp=.o)
 

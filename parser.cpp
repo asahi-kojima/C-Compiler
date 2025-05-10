@@ -8,29 +8,66 @@
 #include <string.h>
 #include "parser.h"
 
-
-AstNode* make_new_node(AstNodeKind kind, AstNode* lhs_node, AstNode* rhs_node)
+namespace
 {
-    AstNode* node = reinterpret_cast<AstNode*>(calloc(1, sizeof(AstNode)));
-    node->kind =kind;
-    node->lhs_node = lhs_node;
-    node->rhs_node = rhs_node;
+    AstNode* make_new_node(AstNodeKind kind, AstNode* lhs_node, AstNode* rhs_node)
+    {
+        AstNode* node = reinterpret_cast<AstNode*>(calloc(1, sizeof(AstNode)));
+        node->kind =kind;
+        node->lhs_node = lhs_node;
+        node->rhs_node = rhs_node;
 
-    return node;
+        return node;
+    }
+
+    AstNode* make_new_node_of_ident(const char* name_of_ident)
+    {
+        AstNode* node = make_new_node(AstNodeKind::ND_LVAR, nullptr, nullptr);
+        node->property.of_ident.name = name_of_ident;
+
+        return node;
+    }
+
+    AstNode* make_new_node_of_num(s32 value)
+    {
+        AstNode* node = make_new_node(AstNodeKind::ND_NUM, nullptr, nullptr);
+        node->property.of_num.value = value;
+
+        return node;
+    }
 }
 
-AstNode* make_new_node_of_num(s32 value)
+std::vector<AstNode*> Parser::program()
 {
-    AstNode* node = make_new_node(AstNodeKind::ND_NUM, nullptr, nullptr);
-    node->property.of_num.value = value;
-
-    return node;
+    std::vector<AstNode*> nodes;
+    while (!m_token_stream_ptr->at_end())
+    {
+        nodes.push_back(statement());
+    }
+    return nodes;
 }
 
+AstNode* Parser::statement()
+{
+    AstNode* node = expr();
+    m_token_stream_ptr->expect(";");
+    return node;
+}
 
 AstNode* Parser::expr()
 {
-    return equality();
+    return assign();
+}
+
+AstNode* Parser::assign()
+{
+    AstNode* node = equality();
+    if (m_token_stream_ptr->consume_if("="))
+    {
+        node = make_new_node(AstNodeKind::ND_ASSIGN, node, assign());
+    }
+    
+    return node;
 }
 
 AstNode* Parser::equality()
@@ -144,6 +181,13 @@ AstNode* Parser::primary()
         AstNode* node = expr();
         m_token_stream_ptr->expect(")");
         return node;
+    }
+
+    if (m_token_stream_ptr->get_current_token_ptr()->token_kind == TokenKind::TK_IDENT)
+    {
+        const auto& [str, len] = m_token_stream_ptr->get_current_token_ptr()->property.of_string;
+        m_token_stream_ptr->skip();
+        return make_new_node_of_ident(str);
     }
 
     return make_new_node_of_num(m_token_stream_ptr->expect_number());
