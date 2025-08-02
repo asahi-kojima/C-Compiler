@@ -1,12 +1,14 @@
 #!/usr/bin/bash
 
+BUILD_DIR=build
+
 assert(){
     echo "========================================================"
 
     expected="$1"
     input="$2"
 
-    ./compiler.out "$input" > tmp.s
+    ${BUILD_DIR}/compiler.out "$input" > ${BUILD_DIR}/tmp.s
     is_success="$?"
     if [ $is_success -ne 0 ]; then
         echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -15,7 +17,7 @@ assert(){
         exit 1
     fi
 
-    gcc -o tmp -z noexecstack tmp.s
+    gcc -o ${BUILD_DIR}/tmp.out -z noexecstack ${BUILD_DIR}/tmp.s
 
     if [ "$?" -ne 0 ]; then
         echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -27,7 +29,8 @@ assert(){
         echo "---------------------"
         exit 1
     fi
-    ./tmp
+    
+    ${BUILD_DIR}/tmp.out
     actual="$?"
     
     if [ "$actual" = "$expected" ]; then
