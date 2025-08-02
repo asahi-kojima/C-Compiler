@@ -10,7 +10,8 @@ DUMMY_MKDIR:=$(shell mkdir -p build)
 
 SRCS=$(wildcard $(SRC_DIRS)/*.cpp)
 OBJS=$(patsubst $(SRC_DIRS)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
-#OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
+DEPS:=$(OBJS:%.o=%.d)
+
 
 all: build/$(TARGET)
 
@@ -19,7 +20,7 @@ build/$(TARGET): $(OBJS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIRS)/%.cpp
 	echo $^ Compile Start!
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -MMD -o $@ -c $<
 
 
 test: $(BUILD_DIR)/compiler.out
@@ -28,7 +29,9 @@ test: $(BUILD_DIR)/compiler.out
 test-on-docker:
 	docker compose -f DockerEnv/docker-compose.yml up
 
+-include $(DEPS)
+
 clean:
-	rm -f *.out *.o *~ tmp*
+	rm -f $(BUILD_DIR)/*
 
 .PHONY: all test clean
