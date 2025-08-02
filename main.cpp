@@ -31,6 +31,9 @@ int main(int argc, char** argv)
         for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
         {
             GenerateAssemblyCode(*iter);
+
+            //コンパイル結果がスタックに積まれていってしまうので、raxに適当に退避させる。
+            //必要でないなら上書きしても問題ない
             printf("    pop rax\n");
         }
 

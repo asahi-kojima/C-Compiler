@@ -1,24 +1,28 @@
-CC=g++
-CFLAGS=-std=c++17 -g -static -Wall
-# SRCS=$(filter-out func_example.cpp , $(wildcard *.cpp))
-# OBJS=$(SRCS:.cpp=.o)
+CXX=g++
+CXXFLAGS=-std=c++17 -g -static -Wall
 
-compiler.out: main.o tokenizer.o parser.o code-generator.o
-	$(CC) $(CFLAGS) -o $@ *.o
+SRC_DIRS = .
+BUILD_DIR = ./build
 
-main.o: main.cpp essential.h tokenizer.h parser.h code-generator.h
-	$(CC) $(CFLAGS) -o $@ -c $<
+TARGET=compiler.out
 
-tokenizer.o: tokenizer.cpp tokenizer.h essential.h
-	$(CC) $(CFLAGS) -o $@ -c $<
+DUMMY_MKDIR:=$(shell mkdir -p build)
 
-parser.o: parser.cpp parser.h tokenizer.h essential.h
-	$(CC) $(CFLAGS) -o $@ -c $<
+SRCS=$(wildcard $(SRC_DIRS)/*.cpp)
+OBJS=$(patsubst $(SRC_DIRS)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
+#OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
-code-generator.o: code-generator.cpp code-generator.h parser.h essential.h
-	$(CC) $(CFLAGS) -o $@ -c $<
+all: build/$(TARGET)
 
-test: compiler.out
+build/$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(BUILD_DIR)/%.o: $(SRC_DIRS)/%.cpp
+	echo $^ Compile Start!
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+
+test: $(BUILD_DIR)/compiler.out
 	bash ./test.sh
 
 test-on-docker:
@@ -27,4 +31,4 @@ test-on-docker:
 clean:
 	rm -f *.out *.o *~ tmp*
 
-.PHONY: test clean
+.PHONY: all test clean
