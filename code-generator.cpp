@@ -42,11 +42,11 @@ void GenerateAssemblyCode(AstNode* node)
         printf("    mov [rax], rdi\n");
         printf("    push rdi\n");
         return;
+
+    default:
+        //終端記号以外はここを通過し、さらにコンパイル作業が続く。
+        ;
     }
-
-
-    //終端記号の場合はここまでで終わるはず
-    //一方で比終端記号の場合はここから更にコンパイル作業が続く
 
     GenerateAssemblyCode(node->lhs_node);
     GenerateAssemblyCode(node->rhs_node);
