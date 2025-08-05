@@ -1,7 +1,7 @@
 name: Conformance-Tests
 on: push
 jobs:
-  build:
+  conformance:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
