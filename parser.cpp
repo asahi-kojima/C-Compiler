@@ -105,7 +105,7 @@ AstNode* Parser::relational()
         }
         else if (m_token_stream_ptr->consume_if(">"))
         {
-            node = make_new_node(AstNodeKind::ND_LE, add(), node);
+            node = make_new_node(AstNodeKind::ND_LT, add(), node);
         }
         else if (m_token_stream_ptr->consume_if(">="))
         {
