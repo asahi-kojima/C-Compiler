@@ -17,6 +17,16 @@ int main(int argc, char** argv)
     Parser parser(&token_stream);
     std::vector<AstNode*> nodes = parser.program();
 
+    // --- [DEBUG] ---
+    // 生成された抽象構文木を標準エラー出力に表示
+    fprintf(stderr, "--- Abstract Syntax Tree ---\n");
+    for (const auto& node : nodes)
+    {
+        print_ast(node);
+    }
+    fprintf(stderr, "--------------------------\n\n");
+
+    //アセンブリコードの定型文
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
 
