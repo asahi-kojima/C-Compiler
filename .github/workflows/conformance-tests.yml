@@ -1,0 +1,14 @@
+name: Conformance-Tests
+on: push
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build compiler
+        run: make
+
+      - name: Run tests
+        run: make test

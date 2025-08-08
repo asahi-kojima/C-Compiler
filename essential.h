@@ -18,3 +18,7 @@ using f64 = double;
 
 using const_f32 = const float;
 using const_f64 = const double;
+
+#ifndef DEBUG
+#define DEBUG 1
+#endif

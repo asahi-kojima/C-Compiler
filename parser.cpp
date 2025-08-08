@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include "parser.h"
 
 namespace
@@ -35,7 +36,47 @@ namespace
 
         return node;
     }
+
+    // ASTを再帰的に表示するためのヘルパー関数
+    void print_ast_recursive(AstNode* node, std::string prefix, bool is_last) {
+        if (!node) {
+            return;
+        }
+
+        // ノードの接続線を表示
+        fprintf(stderr, "%s", prefix.c_str());
+        fprintf(stderr, "%s", is_last ? "└── " : "├── ");
+
+        // ノードの種類と値を表示
+        switch (node->kind) {
+            case AstNodeKind::ND_ADD:     fprintf(stderr, "ND_ADD\n"); break;
+            case AstNodeKind::ND_SUB:     fprintf(stderr, "ND_SUB\n"); break;
+            case AstNodeKind::ND_MUL:     fprintf(stderr, "ND_MUL\n"); break;
+            case AstNodeKind::ND_DIV:     fprintf(stderr, "ND_DIV\n"); break;
+            case AstNodeKind::ND_EQ:      fprintf(stderr, "ND_EQ\n"); break;
+            case AstNodeKind::ND_NE:      fprintf(stderr, "ND_NE\n"); break;
+            case AstNodeKind::ND_LT:      fprintf(stderr, "ND_LT\n"); break;
+            case AstNodeKind::ND_LE:      fprintf(stderr, "ND_LE\n"); break;
+            case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
+            case AstNodeKind::ND_LVAR:
+                // 変数名は1文字と仮定
+                fprintf(stderr, "ND_LVAR: %.*s\n", 1, node->property.of_ident.name);
+                break;
+            case AstNodeKind::ND_NUM:
+                fprintf(stderr, "ND_NUM: %d\n", node->property.of_num.value);
+                break;
+        }
+
+        // 子ノードへのプレフィックスを計算
+        std::string child_prefix = prefix + (is_last ? "    " : "│   ");
+
+        // 子ノードを再帰的に表示
+        // rhsが存在する場合、lhsは最後の子ではない
+        print_ast_recursive(node->lhs_node, child_prefix, node->rhs_node == nullptr);
+        print_ast_recursive(node->rhs_node, child_prefix, true);
+    }
 }
+
 
 std::vector<AstNode*> Parser::program()
 {
@@ -105,11 +146,11 @@ AstNode* Parser::relational()
         }
         else if (m_token_stream_ptr->consume_if(">"))
         {
-            node = make_new_node(AstNodeKind::ND_LE, add(), node);
+            node = make_new_node(AstNodeKind::ND_LT, add(), node);
         }
         else if (m_token_stream_ptr->consume_if(">="))
         {
-            node = make_new_node(AstNodeKind::ND_LE, add(), node);
+            node = make_new_node(AstNodeKind::ND_LE, add(), node); // a >= b は b <= a と同じ
         }
         else
         {
@@ -191,4 +232,10 @@ AstNode* Parser::primary()
     }
 
     return make_new_node_of_num(m_token_stream_ptr->expect_number());
+}
+
+
+void print_ast(AstNode* node)
+{
+    print_ast_recursive(node, "", true);
 }
