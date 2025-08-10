@@ -55,3 +55,6 @@ public:
 private:
     TokenStream* m_token_stream_ptr = nullptr;
 };
+
+// ASTをツリー形式で標準エラー出力に表示する (デバッグ用)
+void print_ast(AstNode* node);

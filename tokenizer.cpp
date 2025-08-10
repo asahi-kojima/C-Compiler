@@ -10,25 +10,26 @@
 #include "tokenizer.h"
 
 
-
-void error_at(const char *location, const char *user_input, const char *fmt, ...)
+namespace
 {
-    va_list ap;
-    va_start(ap, fmt);
+    void error_at(const char *location, const char *user_input, const char *fmt, ...)
+    {
+        va_list ap;
+        va_start(ap, fmt);
 
-    int pos = location - user_input;
-    fprintf(stderr, "%s\n", user_input);
-    fprintf(stderr, "%*s", pos, "");
-    fprintf(stderr, "^ ");
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
-    exit(1);
+        int pos = location - user_input;
+        fprintf(stderr, "%s\n", user_input);
+        fprintf(stderr, "%*s", pos, "");
+        fprintf(stderr, "^ ");
+        vfprintf(stderr, fmt, ap);
+        fprintf(stderr, "\n");
+        exit(1);
+    }
 }
+
 
 TokenStream::TokenStream(char* input_string)
 : m_input_string(input_string)
-//, m_token_list()
-//, m_current_token_index(0)
 {
     tokenize();
     m_current_token_iter = m_token_list.begin();
@@ -89,7 +90,8 @@ void TokenStream::tokenize()
                 property.of_string.str = p;
                 property.of_string.len = 2;
             }
-            m_token_list.emplace_back(Token(TokenKind::TK_RESERVED, p, property));
+
+            m_token_list.emplace_back(TokenKind::TK_RESERVED, p, property);
             p+=2;
             continue;
         }
@@ -101,7 +103,8 @@ void TokenStream::tokenize()
                 property.of_string.str = p;
                 property.of_string.len = 1;
             }
-            m_token_list.emplace_back(Token(TokenKind::TK_RESERVED, p, property));
+
+            m_token_list.emplace_back(TokenKind::TK_RESERVED, p, property);
             p++;
             continue;
         }
@@ -113,7 +116,8 @@ void TokenStream::tokenize()
                 property.of_string.str = p;
                 property.of_string.len = 1;
             }
-            m_token_list.emplace_back(Token(TokenKind::TK_IDENT, p, property));
+
+            m_token_list.emplace_back(TokenKind::TK_IDENT, p, property);
             p++;
             continue;
         }
@@ -126,13 +130,14 @@ void TokenStream::tokenize()
             {
                 property.of_num.value = strtol(p, &p, 10); 
             }
-            m_token_list.emplace_back(Token(TokenKind::TK_NUM, token_position_in_input_string, property));
+
+            m_token_list.emplace_back(TokenKind::TK_NUM, token_position_in_input_string, property);
             continue;
         }
     }
 
     //これは重要(ベクターで管理しているから末尾はいらないと思ったが、番兵がいないとパーサーが一個先を読むとかが出来なくなる)。
-    m_token_list.emplace_back(Token(TokenKind::TK_EOF, p));
+    m_token_list.emplace_back(TokenKind::TK_EOF, p);
 }
 
 
