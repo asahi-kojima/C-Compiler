@@ -78,31 +78,13 @@ namespace
 }
 
 
-class FunctionRecord
+std::vector<FunctionRecord> Parser::program()
 {
-public:
-    FunctionRecord(const std::string& name, const std::vector<AstNode*>& nodes)
-    : name(name), nodes(nodes) {}
-
-    // 関数名を取得
-    const std::string& get_name() const { return name; }
-
-    // ノードのリストを取得
-    const std::vector<AstNode*>& get_nodes() const { return nodes; }
-    
-private:
-    std::string name;
-    std::vector<AstNode*> nodes;
-};
-
-
-std::map<std::string, std::vector<AstNode*>> Parser::program()
-{
-    std::map<std::string, std::vector<AstNode*> > function_to_nodes_map;
+    std::vector<FunctionRecord> function_to_nodes_map;
     while (!m_token_stream_ptr->at_end())
     {
         FunctionRecord record = function();
-        function_to_nodes_map[record.get_name()] = record.get_nodes();
+        function_to_nodes_map.push_back(record);
     }
     return function_to_nodes_map;
 }
@@ -131,7 +113,7 @@ FunctionRecord Parser::function()
         }
     }
 
-    FunctionRecord record(function_name, nodes);
+    FunctionRecord record(function_name, nodes, 208); // スタックサイズは仮に208とする
 
     return record;
 }

@@ -17,7 +17,7 @@ void push_address_of_lvar(AstNode* node)
 }
 
 
-//構文木の左右をコンパイルし、特定の計算を行い、スタックトップに
+//構文木の左右をコンパイルし、特定の計算を行い、計算結果をスタックトップに置く。
 void GenerateAssemblyCode(AstNode* node)
 {
     switch (node->kind)

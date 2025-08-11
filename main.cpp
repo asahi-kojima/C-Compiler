@@ -23,15 +23,22 @@ int main(int argc, char** argv)
 
     //トークン化された文字列をパースして、抽象構文木を生成する。
     Parser parser(&token_stream);
-    std::map<std::string, std::vector<AstNode*> > program = parser.program();
+    std::vector<FunctionRecord> program = parser.program();
 
 #ifdef DEBUG
     // --- [DEBUG] ---
     // 生成された抽象構文木を標準エラー出力に表示
     fprintf(stderr, "--- Abstract Syntax Tree ---\n");
-    for (const auto& node : program["main"])
+    for (const auto& function_record : program)
     {
-        print_ast(node);
+        const std::string& function_name = function_record.get_name();
+        const auto& nodes = function_record.get_nodes();
+        
+        fprintf(stderr, "Function: %s\n", function_name.c_str());
+        for (const auto& node : nodes)
+        {
+            print_ast(node);
+        }
     }
     fprintf(stderr, "--------------------------\n\n");
 #endif
@@ -41,14 +48,18 @@ int main(int argc, char** argv)
     printf(".global main\n");
 
     //関数ごとにアセンブリコードを生成する。
-    for (const auto& [function_name, nodes] : program)
+    for (const auto& function_record : program)
     {
+        const std::string& function_name = function_record.get_name();
+        const auto& nodes = function_record.get_nodes();
+        const u32 stack_size = function_record.get_stack_size();
+
         printf("%s:\n", function_name.c_str());
         {
             //プロローグ
             printf("    push rbp\n");
             printf("    mov rbp, rsp\n");
-            printf("    sub rsp, 208\n");
+            printf("    sub rsp, %d\n", stack_size);
             
             for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
             {

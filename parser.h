@@ -36,14 +36,37 @@ struct AstNode
     } property;
 };
 
-class FunctionRecord;
+class FunctionRecord
+{
+public:
+    FunctionRecord(const std::string& name, const std::vector<AstNode*>& nodes, u32 stack_size)
+    : name(name), nodes(nodes), stack_size(stack_size) {}
+
+    // 関数名を取得
+    const std::string& get_name() const { return name; }
+
+    // ノードのリストを取得
+    const std::vector<AstNode*>& get_nodes() const { return nodes; }
+
+    // スタックサイズを取得
+    u32 get_stack_size() const { return stack_size; }
+
+    // スタックサイズを設定
+    void set_stack_size(u32 size) { stack_size = size; }
+    
+private:
+    std::string name;
+    std::vector<AstNode*> nodes;
+    u32 stack_size;
+};
+
 class Parser
 {
 public:
     Parser(TokenStream* token_stream_ptr)
     : m_token_stream_ptr(token_stream_ptr){}
 
-    std::map<std::string, std::vector<AstNode*>> program();
+    std::vector<FunctionRecord> program();
     FunctionRecord function();
     AstNode* statement();
     AstNode* expr();
