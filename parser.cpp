@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <algorithm>
 #include "parser.h"
 
 namespace
@@ -21,10 +22,12 @@ namespace
         return node;
     }
 
-    AstNode* make_new_node_of_ident(const char* name_of_ident)
+    AstNode* make_new_node_of_ident(const char* name_of_ident, u32 len, u32 offset)
     {
         AstNode* node = make_new_node(AstNodeKind::ND_LVAR, nullptr, nullptr);
         node->property.of_ident.name = name_of_ident;
+        node->property.of_ident.len = len;
+        node->property.of_ident.offset = offset;
 
         return node;
     }
@@ -60,7 +63,7 @@ namespace
             case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
             case AstNodeKind::ND_LVAR:
                 // 変数名は1文字と仮定
-                fprintf(stderr, "ND_LVAR: %.*s\n", 1, node->property.of_ident.name);
+                fprintf(stderr, "ND_LVAR: %.*s\n", node->property.of_ident.len, node->property.of_ident.name);
                 break;
             case AstNodeKind::ND_NUM:
                 fprintf(stderr, "ND_NUM: %d\n", node->property.of_num.value);
@@ -89,9 +92,16 @@ std::vector<FunctionRecord> Parser::program()
     return function_to_nodes_map;
 }
 
+namespace
+{   
+    std::vector<std::string>* current_local_variable_names = nullptr;
+}
+
 FunctionRecord Parser::function()
 {
     std::vector<AstNode*> nodes;
+    std::vector<std::string> local_variable_names;
+    current_local_variable_names = &local_variable_names;
 
     // 関数名の確認
     const std::string function_name = m_token_stream_ptr->expect_ident();
@@ -257,8 +267,17 @@ AstNode* Parser::primary()
     if (m_token_stream_ptr->get_current_token_ptr()->token_kind == TokenKind::TK_IDENT)
     {
         const auto& [str, len] = m_token_stream_ptr->get_current_token_ptr()->property.of_string;
+        std::string ident_name(str, len);
         m_token_stream_ptr->skip();
-        return make_new_node_of_ident(str);
+
+        auto it = std::find(current_local_variable_names->begin(), current_local_variable_names->end(), ident_name);
+        if (it == current_local_variable_names->end()) {
+            current_local_variable_names->push_back(ident_name);
+        }
+        const u32 offset = std::distance(current_local_variable_names->begin(), std::find(current_local_variable_names->begin(), current_local_variable_names->end(), ident_name)) + 1;
+        fprintf(stderr, "識別子 '%s' のオフセット: %d\n", ident_name.c_str(), offset);
+
+        return make_new_node_of_ident(str, len,offset);
     }
 
     return make_new_node_of_num(m_token_stream_ptr->expect_number());

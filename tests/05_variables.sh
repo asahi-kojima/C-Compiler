@@ -41,3 +41,24 @@ main()
     z = x + y;
     2 * z + 1;
 }"
+
+assert 1 "
+main()
+{
+    xx = 1;
+}"
+
+
+assert 1 "
+add()
+{
+    x = 1;
+    y = 2;
+    z = x + y;
+}
+main()
+{
+    xx = 1;
+    xy = 2;
+    xx;
+}"

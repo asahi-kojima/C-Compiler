@@ -32,7 +32,7 @@ struct AstNode
     union 
     {
         struct {s32 value;} of_num;
-        struct {const char* name;} of_ident;
+        struct {const char* name; u32 len; u32 offset;} of_ident;
     } property;
 };
 

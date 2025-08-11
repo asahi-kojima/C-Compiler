@@ -12,7 +12,7 @@ void push_address_of_lvar(AstNode* node)
     }
 
     printf("    mov rax, rbp\n");
-    printf("    sub rax, %d\n", (node->property.of_ident.name[0] - 'a') * 8);
+    printf("    sub rax, %d\n", node->property.of_ident.offset * 8);
     printf("    push rax\n");
 }
 
