@@ -25,6 +25,11 @@ namespace
         fprintf(stderr, "\n");
         exit(1);
     }
+
+    bool is_identifier_char(char c)
+    {
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || (c == '_');
+    }
 }
 
 
@@ -96,7 +101,7 @@ void TokenStream::tokenize()
             continue;
         }
 
-        if (strchr("+-*/()<>=;", *p))
+        if (strchr("+-*/()<>=;{}", *p))
         {
             Token::TokenProperty property;
             {
@@ -111,14 +116,28 @@ void TokenStream::tokenize()
 
         if ('a' <= *p && *p <= 'z')
         {
+            u32 len = 1;
+            while (true)
+            {
+                const char next_char = *(p + len);
+                if (is_identifier_char(next_char))
+                {
+                    len++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             Token::TokenProperty property;
             {
                 property.of_string.str = p;
-                property.of_string.len = 1;
+                property.of_string.len = len;
             }
 
             m_token_list.emplace_back(TokenKind::TK_IDENT, p, property);
-            p++;
+            p += len;
             continue;
         }
 
@@ -134,6 +153,9 @@ void TokenStream::tokenize()
             m_token_list.emplace_back(TokenKind::TK_NUM, token_position_in_input_string, property);
             continue;
         }
+
+        fprintf(stderr, "不明な文字 '%c' が入力されました。\n", *p);
+        exit(1); //ここに来るのは想定外の文字列なので、エラー終了する。
     }
 
     //これは重要(ベクターで管理しているから末尾はいらないと思ったが、番兵がいないとパーサーが一個先を読むとかが出来なくなる)。
@@ -141,11 +163,11 @@ void TokenStream::tokenize()
 }
 
 
-bool TokenStream::consume_if(const char* str)
+bool TokenStream::consume_if(const char* str, TokenKind kind)
 {
     const Token& current_token = *m_current_token_iter;
     
-    if (current_token.token_kind != TokenKind::TK_RESERVED ||
+    if (current_token.token_kind != kind ||
         static_cast<size_t>(current_token.property.of_string.len) != strlen(str) ||
         memcmp(current_token.property.of_string.str, str, current_token.property.of_string.len))
     {
@@ -182,6 +204,18 @@ s32 TokenStream::expect_number()
 
     m_current_token_iter++;
     return value;
+}
+
+std::string TokenStream::expect_ident()
+{
+    if (m_current_token_iter->token_kind != TokenKind::TK_IDENT)
+    {
+        error_at(m_current_token_iter->token_position_in_input_string, m_input_string, "識別子ではありません。");
+    }
+
+    const auto& [str, len] = m_current_token_iter->property.of_string;
+    m_current_token_iter++;
+    return std::string(str, len);
 }
 
 void TokenStream::skip()

@@ -17,16 +17,19 @@ int main(int argc, char** argv)
     //入力された文字列をトークン化する。
     //入力文字列はargv[1]に格納されている。
     TokenStream token_stream(argv[1]);
+#ifdef DEBUG
+    token_stream.print_all_tokens();
+#endif
 
     //トークン化された文字列をパースして、抽象構文木を生成する。
     Parser parser(&token_stream);
-    std::vector<AstNode*> nodes = parser.program();
+    std::map<std::string, std::vector<AstNode*> > program = parser.program();
 
 #ifdef DEBUG
     // --- [DEBUG] ---
     // 生成された抽象構文木を標準エラー出力に表示
     fprintf(stderr, "--- Abstract Syntax Tree ---\n");
-    for (const auto& node : nodes)
+    for (const auto& node : program["main"])
     {
         print_ast(node);
     }
@@ -37,27 +40,31 @@ int main(int argc, char** argv)
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
 
-    //main関数のブロック
-    printf("main:\n");
+    //関数ごとにアセンブリコードを生成する。
+    for (const auto& [function_name, nodes] : program)
     {
-        //プロローグ
-        printf("    push rbp\n");
-        printf("    mov rbp, rsp\n");
-        printf("    sub rsp, 208\n");
-        
-        for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
+        printf("%s:\n", function_name.c_str());
         {
-            GenerateAssemblyCode(*iter);
+            //プロローグ
+            printf("    push rbp\n");
+            printf("    mov rbp, rsp\n");
+            printf("    sub rsp, 208\n");
+            
+            for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
+            {
+                GenerateAssemblyCode(*iter);
 
-            //コンパイル結果がスタックに積まれていってしまうので、raxに適当に退避させる。
-            //必要でないなら上書きしても問題ない
-            printf("    pop rax\n");
+                //コンパイル結果がスタックに積まれていってしまうので、raxに適当に退避させる。
+                //必要でないなら上書きしても問題ない
+                printf("    pop rax\n");
+            }
+            
+            //エピローグ
+            printf("    mov rsp, rbp\n");
+            printf("    pop rbp\n");
+            printf("    ret\n");
         }
-
-        //エピローグ
-        printf("    mov rsp, rbp\n");
-        printf("    pop rbp\n");
-        printf("    ret\n");
     }
+
     return 0;
 }

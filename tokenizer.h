@@ -1,6 +1,7 @@
 #pragma once
-#include "essential.h"
 #include <vector>
+#include <string>
+#include "essential.h"
 
 enum class TokenKind
 {
@@ -47,13 +48,15 @@ public:
     TokenStream(char* input_string);
 
     //現在のトークンタイプがRESERVEDであり、かつ指定した文字列の場合にトークンを読み進める。
-    bool consume_if(const char* str);
+    bool consume_if(const char* str, TokenKind kind = TokenKind::TK_RESERVED);
 
     //トークンがRESERVED型であり、指定した文字列である事を確認する。
     void expect(const char* str);
 
     //現在のトークンが数字である事を確認する。
     s32 expect_number();
+
+    std::string expect_ident();
 
     //現在のトークンを読み飛ばす。
     void skip();

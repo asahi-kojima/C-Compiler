@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "essential.h"
 #include "tokenizer.h"
 
@@ -35,13 +36,15 @@ struct AstNode
     } property;
 };
 
+class FunctionRecord;
 class Parser
 {
 public:
     Parser(TokenStream* token_stream_ptr)
     : m_token_stream_ptr(token_stream_ptr){}
 
-    std::vector<AstNode*> program();
+    std::map<std::string, std::vector<AstNode*>> program();
+    FunctionRecord function();
     AstNode* statement();
     AstNode* expr();
     AstNode* assign();

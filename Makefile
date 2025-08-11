@@ -20,7 +20,7 @@ build/$(TARGET): $(OBJS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIRS)/%.cpp
 	echo $^ Compile Start!
-	$(CXX) $(CXXFLAGS) -MMD -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -DDEBUG -MMD -o $@ -c $<
 
 
 test: $(BUILD_DIR)/compiler.out

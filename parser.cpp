@@ -78,14 +78,62 @@ namespace
 }
 
 
-std::vector<AstNode*> Parser::program()
+class FunctionRecord
 {
+public:
+    FunctionRecord(const std::string& name, const std::vector<AstNode*>& nodes)
+    : name(name), nodes(nodes) {}
+
+    // 関数名を取得
+    const std::string& get_name() const { return name; }
+
+    // ノードのリストを取得
+    const std::vector<AstNode*>& get_nodes() const { return nodes; }
+    
+private:
+    std::string name;
     std::vector<AstNode*> nodes;
+};
+
+
+std::map<std::string, std::vector<AstNode*>> Parser::program()
+{
+    std::map<std::string, std::vector<AstNode*> > function_to_nodes_map;
     while (!m_token_stream_ptr->at_end())
     {
-        nodes.push_back(statement());
+        FunctionRecord record = function();
+        function_to_nodes_map[record.get_name()] = record.get_nodes();
     }
-    return nodes;
+    return function_to_nodes_map;
+}
+
+FunctionRecord Parser::function()
+{
+    std::vector<AstNode*> nodes;
+
+    // 関数名の確認
+    const std::string function_name = m_token_stream_ptr->expect_ident();
+    m_token_stream_ptr->expect("(");
+    m_token_stream_ptr->expect(")");
+    m_token_stream_ptr->expect("{");
+    while (!m_token_stream_ptr->consume_if("}"))
+    {
+        // 関数の中身を解析
+        AstNode* node = statement();
+        if (node)
+        {
+            nodes.push_back(node);
+        }
+        else
+        {
+            fprintf(stderr, "構文エラー: ステートメントが期待されました。\n");
+            exit(1);
+        }
+    }
+
+    FunctionRecord record(function_name, nodes);
+
+    return record;
 }
 
 AstNode* Parser::statement()
