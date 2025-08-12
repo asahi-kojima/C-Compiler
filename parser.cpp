@@ -60,6 +60,7 @@ namespace
             case AstNodeKind::ND_NE:      fprintf(stderr, "ND_NE\n"); break;
             case AstNodeKind::ND_LT:      fprintf(stderr, "ND_LT\n"); break;
             case AstNodeKind::ND_LE:      fprintf(stderr, "ND_LE\n"); break;
+            case AstNodeKind::ND_RETURN:  fprintf(stderr, "ND_RETURN\n"); break;
             case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
             case AstNodeKind::ND_LVAR:
                 // 変数名は1文字と仮定
@@ -123,13 +124,21 @@ FunctionRecord Parser::function()
         }
     }
 
-    FunctionRecord record(function_name, nodes, 208); // スタックサイズは仮に208とする
+    FunctionRecord record(function_name, nodes, function_name.size() * LOCAL_VARIABLE_BYTE_SIZE);
 
     return record;
 }
 
 AstNode* Parser::statement()
 {
+    if (m_token_stream_ptr->consume_if("return", TokenKind::TK_RESERVED))
+    {
+        AstNode* node = expr();
+        m_token_stream_ptr->expect(";");
+        node = make_new_node(AstNodeKind::ND_RETURN, node, nullptr);
+        return node;
+    }
+
     AstNode* node = expr();
     m_token_stream_ptr->expect(";");
     return node;

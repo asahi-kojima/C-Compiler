@@ -60,7 +60,7 @@ int main(int argc, char** argv)
             printf("    push rbp\n");
             printf("    mov rbp, rsp\n");
             printf("    sub rsp, %d\n", stack_size);
-            
+
             for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
             {
                 GenerateAssemblyCode(*iter);
@@ -69,7 +69,10 @@ int main(int argc, char** argv)
                 //必要でないなら上書きしても問題ない
                 printf("    pop rax\n");
             }
-            
+
+            //関数の返り値はraxに格納されるが、上記の処理でスタック最上部に乗っている値をraxに取り出しているので、
+            //このままリターンして問題ない。
+
             //エピローグ
             printf("    mov rsp, rbp\n");
             printf("    pop rbp\n");

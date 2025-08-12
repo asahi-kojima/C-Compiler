@@ -48,6 +48,14 @@ main()
     xx = 1;
 }"
 
+assert 8 "
+main()
+{    
+    x = 1;
+    xy = 2;
+    xyz = x + xy;
+    x = 2 * xyz + xy;
+}"
 
 assert 1 "
 add()

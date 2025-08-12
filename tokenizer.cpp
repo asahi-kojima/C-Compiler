@@ -88,6 +88,21 @@ void TokenStream::tokenize()
             continue;
         }
 
+        //"return"を検知する
+        if (!strncmp(p, "return", 6) && !is_identifier_char(*(p + 6)))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = 6;
+            }
+
+            m_token_list.emplace_back(TokenKind::TK_RESERVED, p, property);
+            p += 6;
+            continue;
+        }
+
+        
         if (!memcmp(p, "==", 2) || !memcmp(p, "!=", 2) || !memcmp(p, "<=", 2) || !memcmp(p, ">=", 2))
         {
             Token::TokenProperty property;

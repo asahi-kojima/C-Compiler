@@ -16,6 +16,8 @@ enum class AstNodeKind
     ND_LT,
     ND_LE,
 
+    ND_RETURN,
+    
     ND_ASSIGN,
     ND_LVAR,
 

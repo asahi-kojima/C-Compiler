@@ -43,6 +43,14 @@ void GenerateAssemblyCode(AstNode* node)
         printf("    push rdi\n");
         return;
 
+    case AstNodeKind::ND_RETURN:
+        GenerateAssemblyCode(node->lhs_node);
+        printf("    pop rax\n");
+        printf("    mov rsp, rbp\n");
+        printf("    pop rbp\n");
+        printf("    ret\n");
+        return;
+
     default:
         //終端記号以外はここを通過し、さらにコンパイル作業が続く。
         ;
