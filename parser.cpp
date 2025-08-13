@@ -284,7 +284,7 @@ AstNode* Parser::primary()
             current_local_variable_names->push_back(ident_name);
         }
         const u32 offset = std::distance(current_local_variable_names->begin(), std::find(current_local_variable_names->begin(), current_local_variable_names->end(), ident_name)) + 1;
-        fprintf(stderr, "識別子 '%s' のオフセット: %d\n", ident_name.c_str(), offset);
+        fprintf(stderr, "識別子 '%s' のオフセット: %d\n", ident_name.c_str(), offset);//delete this line in production code
 
         return make_new_node_of_ident(str, len,offset);
     }

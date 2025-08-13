@@ -56,10 +56,25 @@ int main(int argc, char** argv)
 
         printf("%s:\n", function_name.c_str());
         {
+            //プロローグ処理の補足
+            //以下のスタックモデルでは左を下位メモリ、右を上位メモリとする。x64では下位アドレスにスタックは積まれる。
+            //(0)関数をcallした時のスタックの状態
+            //...|return address|..............
+            //   └──stack pointer(rsp)  └──base pointer(rbp)
+            //(1)push rbpの後の状態
+            //...|前の関数フレームのrbp|return address|..............
+            //   └──stack pointer(rsp)                      └──base pointer(rbp)
+            //(2)mov rbp, rspの後の状態
+            //...|前の関数フレームのrbp|return address|..............
+            //   └──stack pointer(rsp)=rbp
+            //(3)sub rsp, stack_sizeの後の状態
+            //...|variable2の領域|variable1の領域|variable0の領域|前の関数フレームのrbp|return address|..............
+            //   └──stack pointer(rsp)                         └──rbp-stack_size
+
             //プロローグ
-            printf("    push rbp\n");
-            printf("    mov rbp, rsp\n");
-            printf("    sub rsp, %d\n", stack_size);
+            printf("    push rbp\n");                   // rbpをスタックに保存：前の関数のベースポインタを保存しておく
+            printf("    mov rbp, rsp\n");               // 現在のスタックポインタをベースポインタに設定
+            printf("    sub rsp, %d\n", stack_size);    // ローカル変数の分だけスタックサイズを確保
 
             for (auto iter = nodes.begin(), end = nodes.end(); iter != end; iter++)
             {
