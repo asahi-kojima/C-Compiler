@@ -36,3 +36,11 @@ main()
     return x + 1;
     return x;
 }"
+
+assert 3 "
+main()
+{
+    returnx = 1;
+    returnx = returnx + 1;
+    return returnx + 1;
+}"
