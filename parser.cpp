@@ -133,7 +133,7 @@ FunctionRecord Parser::function()
         }
     }
 
-    FunctionRecord record(function_name, nodes, function_name.size() * LOCAL_VARIABLE_BYTE_SIZE);
+    FunctionRecord record(function_name, nodes, local_variable_names.size() * LOCAL_VARIABLE_BYTE_SIZE);
 
     return record;
 }
