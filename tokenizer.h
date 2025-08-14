@@ -7,6 +7,7 @@ enum class TokenKind
 {
     TK_RESERVED,
     TK_IF,
+    TK_ELSE,
     TK_WHILE,
     TK_FOR,
     TK_RETURN,

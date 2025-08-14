@@ -1,6 +1,2 @@
-*~
-*.o
-tmp*
-*.out
-*.s
+.vscode/
 build/

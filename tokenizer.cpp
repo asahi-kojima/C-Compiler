@@ -85,6 +85,11 @@ void TokenStream::print_all_tokens() const
             break;
         
         case TokenKind::TK_RESERVED:
+        case TokenKind::TK_RETURN:
+        case TokenKind::TK_IF:
+        case TokenKind::TK_ELSE:
+        case TokenKind::TK_WHILE:
+        case TokenKind::TK_FOR:
         case TokenKind::TK_IDENT:
             char reserved_string[100];
             strncpy(reserved_string, iter->property.of_string.str, iter->property.of_string.len);
@@ -124,11 +129,49 @@ void TokenStream::tokenize()
                 property.of_string.len = 6;
             }
 
-            m_token_list.emplace_back(TokenKind::TK_RESERVED, p, property);
+            m_token_list.emplace_back(TokenKind::TK_RETURN, p, property);
             p += 6;
             continue;
         }
 
+        if (const u32 len_of_if = 2; !strncmp(p, "if", len_of_if) && !is_identifier_char(*(p + len_of_if)))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = len_of_if;
+            }
+
+            m_token_list.emplace_back(TokenKind::TK_IF, p, property);
+            p += len_of_if;
+            continue;
+        }
+
+        if (const u32 len_of_else = 4; !strncmp(p, "else", len_of_else) && !is_identifier_char(*(p + len_of_else)))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = len_of_else;
+            }
+
+            m_token_list.emplace_back(TokenKind::TK_ELSE, p, property);
+            p += len_of_else;
+            continue;
+        }
+
+        if (const u32 len_of_while = 5; !strncmp(p, "while", len_of_while) && !is_identifier_char(*(p + len_of_while)))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = len_of_while;
+            }
+
+            m_token_list.emplace_back(TokenKind::TK_WHILE, p, property);
+            p += len_of_while;
+            continue;
+        }
         
         if (!memcmp(p, "==", 2) || !memcmp(p, "!=", 2) || !memcmp(p, "<=", 2) || !memcmp(p, ">=", 2))
         {

@@ -20,6 +20,7 @@ void push_address_of_lvar(AstNode* node)
 //構文木の左右をコンパイルし、特定の計算を行い、計算結果をスタックトップに置く。
 void GenerateAssemblyCode(AstNode* node)
 {
+    static u32 label_id = 0;
     switch (node->kind)
     {
     case AstNodeKind::ND_NUM:
@@ -49,6 +50,40 @@ void GenerateAssemblyCode(AstNode* node)
         printf("    mov rsp, rbp\n");
         printf("    pop rbp\n");
         printf("    ret\n");
+        return;
+
+    case AstNodeKind::ND_IF:
+        {
+            GenerateAssemblyCode(node->condition_node);
+            printf("    pop rax\n"); //条件式の結果をraxに格納
+            printf("    cmp rax, 0\n");//raxの値(コンディションがtrueなら1、falseなら0)が0と等しい場合にalレジスタに1をセット
+            printf("    je .Lelse%d\n", label_id);
+            GenerateAssemblyCode(node->lhs_node);
+            printf("    jmp .Lend%d\n", label_id);
+            printf(".Lelse%d:\n", label_id);
+            if (node->rhs_node != nullptr)
+            {
+                GenerateAssemblyCode(node->rhs_node);
+            }
+            printf(".Lend%d:\n", label_id); //条件が真ならば、スタックにraxを積む
+            
+            label_id++;
+        }
+        return;
+
+    case AstNodeKind::ND_WHILE:
+        {
+            printf(".Lbegin%d:\n", label_id);
+            GenerateAssemblyCode(node->condition_node);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lend%d\n", label_id);
+            GenerateAssemblyCode(node->lhs_node);
+            printf("    jmp .Lbegin%d\n", label_id);
+            printf(".Lend%d:\n", label_id);
+            
+            label_id++;
+        }
         return;
 
     default:

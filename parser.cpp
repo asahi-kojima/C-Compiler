@@ -12,12 +12,13 @@
 
 namespace
 {
-    AstNode* make_new_node(AstNodeKind kind, AstNode* lhs_node, AstNode* rhs_node)
+    AstNode* make_new_node(AstNodeKind kind, AstNode* lhs_node, AstNode* rhs_node, AstNode* condition_node = nullptr)
     {
         AstNode* node = reinterpret_cast<AstNode*>(calloc(1, sizeof(AstNode)));
         node->kind =kind;
         node->lhs_node = lhs_node;
         node->rhs_node = rhs_node;
+        node->condition_node = condition_node;
 
         return node;
     }
@@ -61,9 +62,10 @@ namespace
             case AstNodeKind::ND_LT:      fprintf(stderr, "ND_LT\n"); break;
             case AstNodeKind::ND_LE:      fprintf(stderr, "ND_LE\n"); break;
             case AstNodeKind::ND_RETURN:  fprintf(stderr, "ND_RETURN\n"); break;
+            case AstNodeKind::ND_IF:      fprintf(stderr, "ND_IF\n"); break;
+            case AstNodeKind::ND_WHILE:   fprintf(stderr, "ND_WHILE\n"); break;
             case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
             case AstNodeKind::ND_LVAR:
-                // 変数名は1文字と仮定
                 fprintf(stderr, "ND_LVAR: %.*s\n", node->property.of_ident.len, node->property.of_ident.name);
                 break;
             case AstNodeKind::ND_NUM:
@@ -74,10 +76,17 @@ namespace
         // 子ノードへのプレフィックスを計算
         std::string child_prefix = prefix + (is_last ? "    " : "│   ");
 
-        // 子ノードを再帰的に表示
-        // rhsが存在する場合、lhsは最後の子ではない
-        print_ast_recursive(node->lhs_node, child_prefix, node->rhs_node == nullptr);
-        print_ast_recursive(node->rhs_node, child_prefix, true);
+        // ND_IFとND_WHILEはcondition_nodeを持つ
+        if (node->kind == AstNodeKind::ND_IF || node->kind == AstNodeKind::ND_WHILE) {
+            // condition_node, lhs_node, rhs_nodeの順で表示
+            print_ast_recursive(node->condition_node, child_prefix, false);
+            print_ast_recursive(node->lhs_node, child_prefix, node->rhs_node == nullptr);
+            print_ast_recursive(node->rhs_node, child_prefix, true);
+        } else {
+            // rhsが存在する場合、lhsは最後の子ではない
+            print_ast_recursive(node->lhs_node, child_prefix, node->rhs_node == nullptr);
+            print_ast_recursive(node->rhs_node, child_prefix, true);
+        }
     }
 }
 
@@ -131,12 +140,39 @@ FunctionRecord Parser::function()
 
 AstNode* Parser::statement()
 {
-    if (m_token_stream_ptr->consume_if("return", TokenKind::TK_RESERVED))
+    if (m_token_stream_ptr->consume_if("return", TokenKind::TK_RETURN))
     {
         AstNode* node = expr();
         m_token_stream_ptr->expect(";");
         node = make_new_node(AstNodeKind::ND_RETURN, node, nullptr);
         return node;
+    }
+
+    if (m_token_stream_ptr->consume_if("if", TokenKind::TK_IF))
+    {
+        m_token_stream_ptr->expect("(");
+        AstNode* condition = expr();
+        m_token_stream_ptr->expect(")");
+        AstNode* then_node = statement();
+
+        // elseがあるか確認
+        AstNode* else_node = nullptr;
+        if (m_token_stream_ptr->consume_if("else", TokenKind::TK_ELSE))
+        {
+            else_node = statement();
+        }
+
+        return make_new_node(AstNodeKind::ND_IF, then_node, else_node, condition);
+    }
+
+    if (m_token_stream_ptr->consume_if("while", TokenKind::TK_WHILE))
+    {
+        m_token_stream_ptr->expect("(");
+        AstNode* condition = expr();
+        m_token_stream_ptr->expect(")");
+        AstNode* statement_in_while = statement();
+
+        return make_new_node(AstNodeKind::ND_WHILE, statement_in_while, nullptr, condition);
     }
 
     AstNode* node = expr();
@@ -284,8 +320,9 @@ AstNode* Parser::primary()
             current_local_variable_names->push_back(ident_name);
         }
         const u32 offset = std::distance(current_local_variable_names->begin(), std::find(current_local_variable_names->begin(), current_local_variable_names->end(), ident_name)) + 1;
+#ifdef DEBUG
         fprintf(stderr, "識別子 '%s' のオフセット: %d\n", ident_name.c_str(), offset);//delete this line in production code
-
+#endif
         return make_new_node_of_ident(str, len,offset);
     }
 

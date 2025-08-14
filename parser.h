@@ -17,6 +17,9 @@ enum class AstNodeKind
     ND_LE,
 
     ND_RETURN,
+
+    ND_IF,
+    ND_WHILE,
     
     ND_ASSIGN,
     ND_LVAR,
@@ -30,6 +33,7 @@ struct AstNode
     AstNodeKind kind;
     AstNode* lhs_node;
     AstNode* rhs_node;
+    AstNode* condition_node = nullptr;
 
     union 
     {
