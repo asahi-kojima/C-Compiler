@@ -17,9 +17,36 @@ namespace
         va_list ap;
         va_start(ap, fmt);
 
-        int pos = location - user_input;
-        fprintf(stderr, "%s\n", user_input);
-        fprintf(stderr, "%*s", pos, "");
+        u32 error_pos = location - user_input;
+
+        // エラーが発生した行のみで出力を止めたいので、その行までの文字列を新たに生成する
+        //エラー発生個所以降で最初の改行コードを探る
+        char* input_until_error_line = reinterpret_cast<char*>(malloc(strlen(user_input) + 1));
+        strcpy(input_until_error_line, user_input);
+        for (char* p = input_until_error_line + error_pos; *p != '\0'; p++)
+        {
+            if (*p == '\n')
+            {
+                *p = '\0';
+            }
+        }
+
+        // 最後の改行からの位置を計算
+        u32 last_newline_pos = 0;
+        for (const char* p = input_until_error_line; *p != '\0'; p++)
+        {            
+            if (*p == '\n')
+            {    
+                last_newline_pos = p - input_until_error_line + 1; // +1 to include the newline character
+            }
+        }
+
+        u32 error_pos_at_error_line = error_pos - last_newline_pos;
+
+
+        // エラー情報の出力
+        fprintf(stderr, "%s\n", input_until_error_line);
+        fprintf(stderr, "%*s", error_pos_at_error_line, "");
         fprintf(stderr, "^ ");
         vfprintf(stderr, fmt, ap);
         fprintf(stderr, "\n");
