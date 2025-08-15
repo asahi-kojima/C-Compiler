@@ -80,7 +80,9 @@ void GenerateAssemblyCode(AstNode* node)
             printf("    je .Lend%d\n", label_id);
             GenerateAssemblyCode(node->lhs_node);
             printf("    jmp .Lbegin%d\n", label_id);
+            printf("    pop rax\n");
             printf(".Lend%d:\n", label_id);
+            printf("    push 0\n");//計算終了後にスタックに積まれた値を除去する箇所があるが、そこと相殺するようにダミーを置いておく。
             
             label_id++;
         }
