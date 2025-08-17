@@ -118,6 +118,17 @@ assert 123 "
 main()
 {
     x = 123;
+    y = 0;
+    while(0)
+        y = y + 1;
+
+    return x;
+}"
+
+assert 123 "
+main()
+{
+    x = 123;
     while(0)
         x = x + 1;
 

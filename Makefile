@@ -29,6 +29,9 @@ test: $(BUILD_DIR)/compiler.out
 test-on-docker:
 	docker compose -f DockerEnv/docker-compose.yml up
 
+bash-on-docker:
+	docker compose -f DockerEnv/docker-compose.yml run  --rm -it app bash
+
 -include $(DEPS)
 
 clean:

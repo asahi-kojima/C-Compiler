@@ -23,6 +23,7 @@ enum class AstNodeKind
     
     ND_ASSIGN,
     ND_LVAR,
+    ND_FUNCTION_CALL,
 
     ND_NUM,
 };

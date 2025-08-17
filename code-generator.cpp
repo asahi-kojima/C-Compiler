@@ -88,6 +88,14 @@ void GenerateAssemblyCode(AstNode* node)
         }
         return;
 
+    case AstNodeKind::ND_FUNCTION_CALL:
+        {
+            std::string function_name(node->property.of_ident.name,node->property.of_ident.len);
+            printf("    call %s\n", function_name.c_str());
+            printf("    push rax\n");
+        }
+        return;
+
     default:
         //終端記号以外はここを通過し、さらにコンパイル作業が続く。
         ;

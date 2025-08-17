@@ -33,6 +33,16 @@ namespace
         return node;
     }
 
+    AstNode* make_new_node_of_function_call(const char* name_of_ident, u32 len)
+    {
+        AstNode* node = make_new_node(AstNodeKind::ND_FUNCTION_CALL, nullptr, nullptr);
+        node->property.of_ident.name = name_of_ident;
+        node->property.of_ident.len = len;
+
+        return node;
+    }
+
+
     AstNode* make_new_node_of_num(s32 value)
     {
         AstNode* node = make_new_node(AstNodeKind::ND_NUM, nullptr, nullptr);
@@ -315,6 +325,14 @@ AstNode* Parser::primary()
         std::string ident_name(str, len);
         m_token_stream_ptr->skip();
 
+        //識別子の後に括弧が来ていれば関数呼び出し
+        if (m_token_stream_ptr->consume_if("(", TokenKind::TK_RESERVED))
+        {
+            m_token_stream_ptr->expect(")");
+            return make_new_node_of_function_call(str, len);
+        }
+
+        //ローカル変数のテーブル内に既に存在しているか確認し、なければ新規に追加する。
         auto it = std::find(current_local_variable_names->begin(), current_local_variable_names->end(), ident_name);
         if (it == current_local_variable_names->end()) {
             current_local_variable_names->push_back(ident_name);
