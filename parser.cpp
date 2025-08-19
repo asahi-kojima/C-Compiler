@@ -74,6 +74,7 @@ namespace
             case AstNodeKind::ND_RETURN:  fprintf(stderr, "ND_RETURN\n"); break;
             case AstNodeKind::ND_IF:      fprintf(stderr, "ND_IF\n"); break;
             case AstNodeKind::ND_WHILE:   fprintf(stderr, "ND_WHILE\n"); break;
+            case AstNodeKind::ND_BLOCK:   fprintf(stderr, "ND_BLOCK\n"); break;
             case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
             case AstNodeKind::ND_LVAR:
                 fprintf(stderr, "ND_LVAR: %.*s\n", node->property.of_ident.len, node->property.of_ident.name);
@@ -183,6 +184,39 @@ AstNode* Parser::statement()
         AstNode* statement_in_while = statement();
 
         return make_new_node(AstNodeKind::ND_WHILE, statement_in_while, nullptr, condition);
+    }
+
+    if (m_token_stream_ptr->consume_if("{", TokenKind::TK_RESERVED))
+    {
+        std::vector<AstNode*> node_vec;
+        while (!m_token_stream_ptr->consume_if("}", TokenKind::TK_RESERVED))
+        {
+            AstNode* node = statement();
+            if (!node)
+            {
+                fprintf(stderr, "nullptr\n");
+                exit(1);
+            }
+            node_vec.push_back(node);
+        }
+
+        const u32 block_size = node_vec.size();
+        AstNode** block_nodes = reinterpret_cast<AstNode**>(malloc(sizeof(AstNode*) * block_size));
+        for (u32 i = 0; i < block_size; i++)
+        {
+            block_nodes[i] = node_vec[i];
+        }
+
+        AstNode* node = reinterpret_cast<AstNode*>(calloc(1, sizeof(AstNode)));
+        {
+            node->kind =AstNodeKind::ND_BLOCK;
+            node->lhs_node = nullptr;
+            node->rhs_node = nullptr;
+            node->property.of_block.block_nodes = block_nodes;
+            node->property.of_block.block_size = block_size;
+        }
+
+        return node;
     }
 
     AstNode* node = expr();

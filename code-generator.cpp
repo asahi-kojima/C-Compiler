@@ -96,6 +96,17 @@ void GenerateAssemblyCode(AstNode* node)
         }
         return;
 
+    case AstNodeKind::ND_BLOCK:
+        {
+            for (u32 i = 0; i < node->property.of_block.block_size; i++)
+            {
+                GenerateAssemblyCode(node->property.of_block.block_nodes[i]);
+                printf("    pop rax\n");
+            }
+            printf("    push 0\n");
+        }
+        return;
+
     default:
         //終端記号以外はここを通過し、さらにコンパイル作業が続く。
         ;
