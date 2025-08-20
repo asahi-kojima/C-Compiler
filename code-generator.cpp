@@ -120,9 +120,26 @@ void GenerateAssemblyCode(AstNode* node)
 
     case AstNodeKind::ND_FUNCTION_CALL:
         {
+            const char* register_name_tbl_for_args[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
             std::string function_name(node->property.of_ident.name,node->property.of_ident.len);
+
+            //まずrspが16バイトアライメントになるように調整する。
+            printf("    mov rax, rbp\n");
+            printf("    and rax, 0xf\n");
+            printf("    test rax, rax\n");
+            //もしアライメントがズレていれば
+            printf("    jz .Laligned%d\n", label_id);
+            printf("    sub rsp, 8\n");//アライメントがズレているので、8バイト分スタックを下げる。
             printf("    call %s\n", function_name.c_str());
+            printf("    add rsp, 8\n");//アライメントの補正を戻す
+            printf("    jmp .Lend%d\n", label_id);
+            printf(".Laligned%d:\n", label_id);
+            //アライメントが揃っていれば
+            printf("    call %s\n", function_name.c_str());
+            printf(".Lend%d:\n", label_id);
             printf("    push rax\n");
+
+            label_id++;
         }
         return;
 
