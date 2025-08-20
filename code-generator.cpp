@@ -88,6 +88,36 @@ void GenerateAssemblyCode(AstNode* node)
         }
         return;
 
+    case AstNodeKind::ND_FOR:
+        {
+            if (node->property.of_for.init != nullptr)
+            {
+                GenerateAssemblyCode(node->property.of_for.init);
+                printf("    pop rax\n"); //初期化式の結果をスタックから除去
+            }
+            printf(".Lbegin%d:\n", label_id);
+            if (node->property.of_for.cond != nullptr)
+            {
+                GenerateAssemblyCode(node->property.of_for.cond);
+                printf("    pop rax\n");
+                printf("    cmp rax, 0\n");//0ならばループを抜ける
+                printf("    je .Lend%d\n", label_id);
+            }
+            GenerateAssemblyCode(node->property.of_for.body);
+            printf("    pop rax\n");
+            if (node->property.of_for.update != nullptr)
+            {
+                GenerateAssemblyCode(node->property.of_for.update);
+                printf("    pop rax\n"); //更新式の結果をスタックから除去
+            }
+            printf("    jmp .Lbegin%d\n", label_id);
+
+            printf(".Lend%d:\n", label_id);
+
+            label_id++;
+        }
+        return;
+
     case AstNodeKind::ND_FUNCTION_CALL:
         {
             std::string function_name(node->property.of_ident.name,node->property.of_ident.len);

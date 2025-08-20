@@ -172,6 +172,19 @@ void TokenStream::tokenize()
             p += len_of_while;
             continue;
         }
+
+        if (const u32 len_of_for = 3; !strncmp(p, "for", len_of_for) && !is_identifier_char(*(p + len_of_for)))
+        {
+            Token::TokenProperty property;
+            {
+                property.of_string.str = p;
+                property.of_string.len = len_of_for;
+            }
+
+            m_token_list.emplace_back(TokenKind::TK_FOR, p, property);
+            p += len_of_for;
+            continue;
+        }
         
         if (!memcmp(p, "==", 2) || !memcmp(p, "!=", 2) || !memcmp(p, "<=", 2) || !memcmp(p, ">=", 2))
         {

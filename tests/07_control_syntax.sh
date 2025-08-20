@@ -166,3 +166,31 @@ main()
 
     return x;
 }"
+
+assert 0 "
+main()
+{
+    for (i = 0; i < 0; i = i + 1)
+        return 1;
+    return 0;
+}
+"
+
+assert 1 "
+main()
+{
+    for (i = 0; i < 1; i = i + 1)
+        return 1;
+    return 0;
+}
+"
+
+assert 5 "
+main()
+{
+    x = 0;
+    y = 5;
+    for (i = 0; i < y; i = i + 1)
+        x = x + 1;
+    return x;
+}"

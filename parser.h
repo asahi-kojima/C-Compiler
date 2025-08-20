@@ -20,6 +20,7 @@ enum class AstNodeKind
 
     ND_IF,
     ND_WHILE,
+    ND_FOR,
 
     ND_BLOCK,
     
@@ -43,6 +44,13 @@ struct AstNode
         struct {s32 value;} of_num;
         struct {const char* name; u32 len; u32 offset;} of_ident;
         struct {AstNode** block_nodes; u32 block_size;} of_block;
+        // for(init; cond; update)
+        struct {
+            AstNode* init;    // 初期化式
+            AstNode* cond;    // 条件式
+            AstNode* update;  // 更新式
+            AstNode* body;    // 本体
+        } of_for;
     } property;
 };
 

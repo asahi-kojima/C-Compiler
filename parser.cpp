@@ -74,6 +74,7 @@ namespace
             case AstNodeKind::ND_RETURN:  fprintf(stderr, "ND_RETURN\n"); break;
             case AstNodeKind::ND_IF:      fprintf(stderr, "ND_IF\n"); break;
             case AstNodeKind::ND_WHILE:   fprintf(stderr, "ND_WHILE\n"); break;
+            case AstNodeKind::ND_FOR:   fprintf(stderr, "ND_FOR\n"); break;
             case AstNodeKind::ND_BLOCK:   fprintf(stderr, "ND_BLOCK\n"); break;
             case AstNodeKind::ND_ASSIGN:  fprintf(stderr, "ND_ASSIGN\n"); break;
             case AstNodeKind::ND_LVAR:
@@ -184,6 +185,48 @@ AstNode* Parser::statement()
         AstNode* statement_in_while = statement();
 
         return make_new_node(AstNodeKind::ND_WHILE, statement_in_while, nullptr, condition);
+    }
+
+    if (m_token_stream_ptr->consume_if("for", TokenKind::TK_FOR))
+    {
+        m_token_stream_ptr->expect("(");
+        AstNode* init = nullptr;
+        AstNode* condition = nullptr;
+        AstNode* update = nullptr;
+
+        // 初期化式があるか確認
+        if (!m_token_stream_ptr->consume_if(";"))
+        {
+            init = expr();
+            m_token_stream_ptr->expect(";");
+        }
+        // 条件式があるか確認
+        if (!m_token_stream_ptr->consume_if(";"))
+        {
+            condition = expr();
+            m_token_stream_ptr->expect(";");
+        }
+        // 更新式があるか確認
+        if (!m_token_stream_ptr->consume_if(")"))
+        {
+            update = expr();
+            m_token_stream_ptr->expect(")");
+        }
+
+        AstNode* body = statement();
+
+        AstNode* for_node = reinterpret_cast<AstNode*>(calloc(1, sizeof(AstNode)));
+        {
+            for_node->kind =AstNodeKind::ND_FOR;
+            for_node->lhs_node = nullptr;
+            for_node->rhs_node = nullptr;
+            for_node->property.of_for.init = init;
+            for_node->property.of_for.cond = condition;
+            for_node->property.of_for.update = update;
+            for_node->property.of_for.body = body;
+        }
+
+        return for_node;
     }
 
     if (m_token_stream_ptr->consume_if("{", TokenKind::TK_RESERVED))
